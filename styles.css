@@ -22,27 +22,34 @@
 /* === MODO OSCURO (SEGÚN SISTEMA) === */
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-color: #020817;
+    --bg-color: #000000;          /* fondo negro parejo */
     --text-color: #e5e7eb;
     --muted-text: #9ca3af;
 
-    --accent-color: #d0e4ed;
+    --accent-color: #d4ecf7;
     --accent-soft: #60a5fa;
 
-    --border-color: #334155;
+    --border-color: #333333;
     --border-soft: #1f2937;
 
-    --card-bg: #0b1220;
-    --sidebar-bg: rgba(9, 9, 11, 0.97);
+    --card-bg: #000000;           /* que los recuadros sigan el negro */
+    --sidebar-bg: rgba(0, 0, 0, 0.97);
 
-    --button-bg: var(--accent-color);
-    --button-text: #0b1220;
+    --button-bg: #38bdf8;
+    --button-text: #000000;
 
     --img-border-color: #4b5563;
   }
 }
 
 /* === BASE / FONDO SEGURO === */
+
+html,
+body,
+.content,
+.section {
+  background-color: var(--bg-color);
+}
 
 html,
 body {
@@ -367,20 +374,4 @@ img {
   margin: 20px auto 0;
   padding: 30px 0;
   width: 90%;
-}
-
-/* Asegura que el ícono de información tenga el mismo color que los demás enlaces */
-.sidebar ul li a {
-  color: var(--text-color);
-  text-decoration: none;
-  font-weight: 700;
-}
-
-.sidebar ul li a:hover {
-  color: var(--accent-color);
-}
-
-/* Fuerza mismo color para el ícono final */
-.sidebar ul li:last-child a {
-  color: var(--text-color);
 }
