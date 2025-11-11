@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<!-- Google tag (gtag.js) --> <script async src="https://www.googletagmanager.com/gtag/js?id=G-7K6PJTCZN0"></script> <script> window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'G-7K6PJTCZN0'); </script> 
   <title>Calculadora de infusiones</title>
   <link rel="stylesheet" type="text/css" href="styles.css">
   <link rel="manifest" href="/manifest.json">
   <link href='https://fonts.googleapis.com/css?family=Lato:300,400,700,400italic' rel='stylesheet' type='text/css'>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
   <style>
     .container {
       max-width: 100%;
@@ -32,6 +32,7 @@
     <nav class="sidebar">
       <ul>
         <li><a href="#" onclick="showSection(5)">Adrenalina</a></li>
+        <li><a href="#" onclick="showSection(16)">Atracurio</a></li>
         <li><a href="#" onclick="showSection(3)">Dobutamina</a></li>
         <li><a href="#" onclick="showSection(2)">Dopamina</a></li>
         <li><a href="#" onclick="showSection(13)">Dexmedetomidina</a></li>
@@ -39,14 +40,15 @@
         <li><a href="#" onclick="showSection(9)">Fentanilo</a></li>
         <li><a href="#" onclick="showSection(15)">Insulina</a></li>
         <li><a href="#" onclick="showSection(7)">Isoproterenol</a></li>
+        <li><a href="#" onclick="showSection(17)">Labetalol</a></li>
         <li><a href="#" onclick="showSection(11)">Midazolam</a></li>
         <li><a href="#" onclick="showSection(4)">Milrinona</a></li>
+        <li><a href="#" onclick="showSection(18)">Nitroprusiato de sodio</a></li>
         <li><a href="#" onclick="showSection(1)">Noradrenalina</a></li>
         <li><a href="#" onclick="showSection(12)">Propofol</a></li>
         <li><a href="#" onclick="showSection(10)">Remifentanilo</a></li>
         <li><a href="#" onclick="showSection(6)">Vasopresina</a></li>
         <li><a href="#" onclick="showSection(14)">&#9432;</a></li>
-
       </ul>
     </nav>
 
@@ -304,8 +306,59 @@
       </div>
 
       
+ <div id="section16" class="section">
+  <h2>Atracurio</h2>
+  <h3>1 amp = 50 mg / 5 ml</h3>
+  <h4>Dosis: 5 - 20 mcg/kg/min</h4>
+  <form onsubmit="calculateAtracurio(event)">
+    <label for="a16">Cant. de ampollas:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a16" required><br>
+    <label for="b16">Ml. de solución:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b16" required><br>
+    <label for="c16">Peso (kg):</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c16" required><br>
+    <label for="d16">ml/h:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d16" required><br><br>
+    <button type="submit">Calcular</button>
+    <p id="result16"></p>
+  </form>
+</div>
 
+<div id="section17" class="section">
+  <h2>Labetalol</h2>
+  <h3>1 amp = 20 mg</h3>
+  <h4>Dosis: 0,5 - 2 mcg/min</h4>
+  <form onsubmit="calculateLabetalol(event)">
+    <label for="a17">Cant. de ampollas:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a17" required><br>
+    <label for="b17">Ml. de solución:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b17" required><br>
+    <label for="d17">ml/h:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d17" required><br><br>
+    <button type="submit">Calcular</button>
+    <p id="result17"></p>
+  </form>
+</div>
+
+<div id="section18" class="section">
+  <h2>Nitroprusiato de sodio</h2>
+  <h3>1 amp = 50 mg</h3>
+  <h4>Dosis: 0,5 - 8 mcg/kg/min</h4>
+  <form onsubmit="calculateNitroprusiato(event)">
+    <label for="a18">Cant. de ampollas:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a18" required><br>
+    <label for="b18">Ml. de solución:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b18" required><br>
+    <label for="c18">Peso (kg):</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c18" required><br>
+    <label for="d18">ml/h:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d18" required><br><br>
+    <button type="submit">Calcular</button>
+    <p id="result18"></p>
+  </form>
+</div>
     </div>
+   
   </div></div>
   <script src="script.js"></script>
 </body>
