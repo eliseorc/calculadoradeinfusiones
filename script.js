@@ -408,6 +408,17 @@ window.addEventListener('DOMContentLoaded', function () {
   // toggleMenu(); // descomentá si querés que arranque cerrado/abierto distinto
 });
 
+window.addEventListener('DOMContentLoaded', function () {
+  const btn = document.querySelector('.hamburger');
+  const sidebar = document.querySelector('.sidebar');
+
+  if (btn && sidebar) {
+    // Abrir el menú al inicio
+    btn.classList.add('is-active');
+    sidebar.classList.add('is_active');
+  }
+});
+
 /* ======================
    AGREGAR A INICIO
    ====================== */
