@@ -1,3 +1,11 @@
+.sr-only {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 /* === PALETA BASE (MODO CLARO) === */
 :root {
   --bg-color: #ffffff;
@@ -302,7 +310,7 @@ button,
 }
 
 button {
-  width: 100px;
+  width: 140px;
 }
 
 .inicial {
