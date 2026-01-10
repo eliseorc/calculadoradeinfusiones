@@ -42,6 +42,10 @@ function calculateNoradrenalina(event) {
 
   var result = (((a35 * 4000) / b35) * d35) / c35 / 60;
   document.getElementById('result1').textContent = result.toFixed(2) + ' mcg/kg/min';
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'noradrenalina'
+  });
 }
 
 function calculateDopamina(event) {
@@ -58,6 +62,10 @@ function calculateDopamina(event) {
 
   var result = (((a43 * 200000) / b43) * d43) / c43 / 60;
   document.getElementById('result2').textContent = result.toFixed(2) + ' mcg/kg/min';
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'dopamina'
+  });
 }
 
 function calculateDobutamina(event) {
@@ -74,6 +82,10 @@ function calculateDobutamina(event) {
 
   var result = (((a39 * 250000) / b39) * d39) / c39 / 60;
   document.getElementById('result3').textContent = result.toFixed(2) + ' mcg/kg/min';
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'dobutamina'
+  });
 }
 
 function calculateMilrinona(event) {
@@ -90,6 +102,10 @@ function calculateMilrinona(event) {
 
   var result = (((a47 * 10000) / b47) * d47) / c47 / 60;
   document.getElementById('result4').textContent = result.toFixed(2) + ' mcg/kg/min';
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'milrinona'
+  });
 }
 
 function calculateAdrenalina(event) {
@@ -106,6 +122,10 @@ function calculateAdrenalina(event) {
 
   var result = (((a72 * 1000) / b72) * d72) / c72 / 60;
   document.getElementById('result5').textContent = result.toFixed(2) + ' mcg/kg/min';
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'adrenalina'
+  });
 }
 
 function calculateVasopresina(event) {
@@ -121,6 +141,10 @@ function calculateVasopresina(event) {
 
   var result = (((a51 * 20) / b51) * c51) / 60;
   document.getElementById('result6').textContent = result.toFixed(2) + ' UI/min';
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'vasopresina'
+  });
 }
 
 function calculateIsoproterenol(event) {
@@ -136,6 +160,10 @@ function calculateIsoproterenol(event) {
 
   var result = (((a56 * 1000) / b56) * c56) / 60;
   document.getElementById('result7').textContent = result.toFixed(2) + ' mcg/min';
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'isoproterenol'
+  });
 }
 
 function calculateFurosemida(event) {
@@ -173,7 +201,11 @@ function calculateFurosemida(event) {
   document.getElementById('result8').innerHTML = 
     dosis.toFixed(2) + ' mg/kg/h' + 
     '<br><small style="color: var(--text-secondary);">Equivale a ' + total24h_g.toFixed(2) + ' g en 24 hs.</small>';
-}
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'furosemida'
+  });
+  }
 
 
 function calculateFentanilo(event) {
@@ -190,6 +222,10 @@ function calculateFentanilo(event) {
 
   var result = ((a3 * 250) / (a3 * 5 + b3) * d3) / c3;
   document.getElementById('result9').textContent = result.toFixed(2) + ' mcg/kg/h';
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'fentanilo'
+  });
 }
 
 function calculateRemifentanilo(event) {
@@ -206,6 +242,10 @@ function calculateRemifentanilo(event) {
 
   var result = ((a11 * 5000) / (a11 * 5 + b11) * d11) / c11;
   document.getElementById('result10').textContent = result.toFixed(2) + ' mcg/kg/h';
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'remifentanilo'
+  });
 }
 
 function calculateMidazolam(event) {
@@ -222,6 +262,10 @@ function calculateMidazolam(event) {
 
   var result = ((a7 * 15) / (a7 * 3 + b7) * d7) / c7;
   document.getElementById('result11').textContent = result.toFixed(2) + ' mcg/kg/h';
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'midazolam'
+  });
 }
 
 function calculatePropofol(event) {
@@ -237,6 +281,10 @@ function calculatePropofol(event) {
 
   var result = ((a15 * 200) / (a15 * 20) * d15) / c15;
   document.getElementById('result12').textContent = result.toFixed(2) + ' mcg/kg/h';
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'propofol'
+  });
 }
 
 function calculateDexmedetomidina(event) {
@@ -253,6 +301,10 @@ function calculateDexmedetomidina(event) {
 
   var result = ((a23 * 200) / (a23 * 2 + b23) * d23) / c23;
   document.getElementById('result13').textContent = result.toFixed(2) + ' mcg/kg/h';
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'dexmedetomidina'
+  });
 }
 
 /* ======================
@@ -278,6 +330,10 @@ function calcularTratamiento() {
   } else {
     tratamiento = "Bolo de 6 unidades, bomba a 3.5 ml/h.";
   }
+  // Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'insulina'
+  });
 
   document.getElementById("resultadoTratamiento1").textContent = tratamiento;
 }
@@ -450,6 +506,10 @@ function calculateAtracurio(event) {
   // 1 amp = 50 mg/5 ml
   var result = (((a16 * 50000) / b16) * d16) / c16 / 60;
   document.getElementById('result16').textContent = result.toFixed(2) + ' mcg/kg/min';
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'atracurio'
+  });
 }
 
 function calculateLabetalol(event) {
@@ -462,10 +522,14 @@ function calculateLabetalol(event) {
     document.getElementById('result17').textContent = 'Revisá los valores.';
     return;
   }
-
   // 1 amp = 20 mg → resultado en mg/min
   var result = (((a17 * 20) / b17) * d17) / 60;
   document.getElementById('result17').textContent = result.toFixed(2) + ' mg/min';
+
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'labetalol'
+  });
 }
 
 function calculateNitroprusiato(event) {
@@ -483,4 +547,9 @@ function calculateNitroprusiato(event) {
   // 1 amp = 50 mg
   var result = (((a18 * 50000) / b18) * d18) / c18 / 60;
   document.getElementById('result18').textContent = result.toFixed(2) + ' mcg/kg/min';
+
+// Evento GA4 – cálculo exitoso
+  gtag('event', 'calculo_realizado', {
+    farmaco: 'nitroprusiato'
+  });
 }
