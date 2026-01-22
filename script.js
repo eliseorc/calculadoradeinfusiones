@@ -553,3 +553,15 @@ function calculateNitroprusiato(event) {
     farmaco: 'nitroprusiato'
   });
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+  if (typeof gtag === 'function') {
+    const theme = window.matchMedia('(prefers-color-scheme: dark)').matches
+      ? 'dark'
+      : 'light';
+
+    gtag('event', 'theme_used', {
+      theme: theme
+    });
+  }
+});
