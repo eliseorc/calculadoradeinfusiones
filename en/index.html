@@ -1,1 +1,389 @@
+<!DOCTYPE htmL>
+<htmL lang="en">
+<head>
+  <title>Infusion Calculator | ICU & Critical Care</title>
+  <link rel="stylesheet" type="text/css" href="../styles.css">
+  <link rel="manifest" href="../manifest.json">
+  <link href='https://fonts.googleapis.com/css?family=Lato:300,400,700,400italic' rel='stylesheet' type='text/css'>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Online infusion calculator for ICU, CCU, cardiac care units, and emergency departments. Quickly and safely converts mL/h of norepinephrine, dopamine, vasopressin, milrinone, dobutamine, fentanyl, midazolam, and other medications into administered doses.">
+  <meta name="color-scheme" content="light dark">
+	<link rel="icon" href="../favicon.png" type="image/png">
+	<link id="canonical" rel="canonical" href="">
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7K6PJTCZN0"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
+  gtag('config', 'G-7K6PJTCZN0');
+</script>
+  <style>
+    .container {
+      max-width: 100%;
+      margin: 0 auto;
+      padding: 0 20px; 
+    }
+    @media (max-width: 375px) { 
+      .container {
+        padding: 0 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="sr-only">Infusion calculator for intensive care, coronary care, and emergency settings. Calculates doses of epinephrine, atracurium, dobutamine, dopamine, dexmedetomidine, furosemide, fentanyl, insulin, isoproterenol, labetalol, midazolam, milrinone, sodium nitroprusside, norepinephrine, propofol, remifentanil, and vasopressin.</h1>
+  <div class="container">
+   <div class="hamburger">
+      <div class="_layer -top"></div>
+      <div class="_layer -mid"></div>
+      <div class="_layer -bottom"></div>
+    </div>
+
+    <nav class="sidebar">
+      <ul>
+  <li><a href="#" onclick="showSection(16)">Atracurium</a></li>
+  <li><a href="#" onclick="showSection(13)">Dexmedetomidine</a></li>
+  <li><a href="#" onclick="showSection(3)">Dobutamine</a></li>
+  <li><a href="#" onclick="showSection(2)">Dopamine</a></li>
+  <li><a href="#" onclick="showSection(5)">Epinephrine</a></li>
+  <li><a href="#" onclick="showSection(9)">Fentanyl</a></li>
+  <li><a href="#" onclick="showSection(8)">Furosemide</a></li>
+  <li><a href="#" onclick="showSection(7)">Isoproterenol</a></li>
+  <li><a href="#" onclick="showSection(17)">Labetalol</a></li>
+  <li><a href="#" onclick="showSection(11)">Midazolam</a></li>
+  <li><a href="#" onclick="showSection(4)">Milrinone</a></li>
+  <li><a href="#" onclick="showSection(1)">Norepinephrine</a></li>
+  <li><a href="#" onclick="showSection(12)">Propofol</a></li>
+  <li><a href="#" onclick="showSection(10)">Remifentanil</a></li>
+  <li><a href="#" onclick="showSection(18)">Sodium nitroprusside</a></li>
+  <li><a href="#" onclick="showSection(6)">Vasopressin</a></li>
+  <li><a href="#" onclick="showSection(14)">&#9432;</a></li>
+</ul>
+    </nav>
+
+    <div class="content">
+      <div id="section1" class="section">
+        <h2>Norepinephrine</h2>
+		  <h3>1 ampoule = 4 mg</h3>
+        <form onsubmit="calculateNoradrenalina(event)">
+          <br>
+          <label for="a35">Number of ampoules:</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a35" required><br>
+          <label for="b35">Dilution volume (mL):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b35" required><br>
+          <label for="c35">Weight (kg):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c35" required><br>
+          <label for="d35">Infusion rate (mL/h):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d35" required><br><br>
+          <button type="submit">Calculate dose</button>
+          <p id="result1"></p>
+        </form>
+      </div>
+      <div id="section2" class="section">
+        <h2>Dopamine</h2>
+		  <h3>1 ampoule = 200 mg</h3>
+        <form onsubmit="calculateDopamina(event)">
+          <br>
+          <label for="a43">Number of ampoules:</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a43" required><br>
+          <label for="b43">Dilution volume (mL):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b43" required><br>
+          <label for="c43">Weight (kg):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c43" required><br>
+          <label for="d43">Infusion rate (mL/h):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d43" required><br><br>
+          <button type="submit">Calculate dose</button>
+          <p id="result2"></p>
+        </form>
+      </div>
+      <div id="section3" class="section">
+        <h2>Dobutamine</h2>
+		  <h3>1 ampoule = 250 mg</h3>
+        <form onsubmit="calculateDobutamina(event)">
+          <br>
+          <label for="a39">Number of ampoules:</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a39" required><br>
+          <label for="b39">Dilution volume (mL):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b39" required><br>
+          <label for="c39">Weight (kg):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c39" required><br>
+          <label for="d39">Infusion rate (mL/h):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d39" required><br><br>
+          <button type="submit">Calculate dose</button>
+          <p id="result3"></p>
+        </form>
+      </div>
+      <div id="section4" class="section">
+        <h2>Milrinone</h2>
+		  <h3>1 ampoule = 10 mg</h3>
+      <h4>Dose: 0.3 - 0.75 mcg/kg/min </h4>
+        <form onsubmit="calculateMilrinona(event)">
+          <label for="a47">Number of ampoules:</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a47" required><br>
+          <label for="b47">Dilution volume (mL):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b47" required><br>
+          <label for="c47">Weight (kg):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c47" required><br>
+          <label for="d47">Infusion rate (mL/h):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d47" required><br><br>
+          <button type="submit">Calculate dose</button>
+          <p id="result4"></p>
+        </form>
+      </div>
+      <div id="section5" class="section">
+        <h2>Epinephrine</h2>
+		  <h3>1 ampoule = 1 mg</h3>
+        <form onsubmit="calculateAdrenalina(event)">
+          <br>
+          <label for="a72">Number of ampoules:</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a72" required><br>
+          <label for="b72">Dilution volume (mL):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b72" required><br>
+          <label for="c72">Weight (kg):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c72" required><br>
+          <label for="d72">Infusion rate (mL/h):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d72" required><br><br>
+          <button type="submit">Calculate dose</button>
+          <p id="result5"></p>
+        </form>
+      </div>
+      <div id="section6" class="section">
+        <h2>Vasopressin</h2>
+		  <h3>1 ampoule = 20 UI</h3>
+		  <h4>Dose: 0.03 - 0.07 UI/min</h4>
+        <form onsubmit="calculateVasopresina(event)">
+          <label for="a51">Number of ampoules:</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a51" required><br>
+          <label for="b51">Dilution volume (mL):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b51" required><br>
+          <label for="c51">Infusion rate (mL/h):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c51" required><br><br>
+          <button type="submit">Calculate dose</button>
+          <p id="result6"></p>
+        </form>
+      </div>
+      <div id="section7" class="section">
+        <h2>Isoproterenol</h2>
+		  <h3>1 ampoule = 1 mg</h3>
+		  <h4>Dose: 0,5 - 10 mcg/min</h4>
+        <form onsubmit="calculateIsoproterenol(event)">
+          <label for="a56">Number of ampoules:</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a56" required><br>
+          <label for="b56">Dilution volume (mL):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b56" required><br>
+          <label for="c56">Infusion rate (mL/h):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c56" required><br><br>
+          <button type="submit">Calculate dose</button>
+          <p id="result7"></p>
+        </form>
+      </div>
+      <div id="section8" class="section">
+        <h2>Furosemida</h2>
+		  <h3>1 ampoule = 20 mg</h3>
+        <form onsubmit="calculateFurosemida(event)">
+          <br>
+          <label for="a29">Number of ampoules:</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a29" required><br>
+          <label for="b29">Dilution volume (mL):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b29" required><br>
+          <label for="c29">Weight (kg):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c29" required><br>
+          <label for="d29">Infusion rate (mL/h):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d29" required><br><br>
+          <button type="submit">Calculate dose</button>
+          <p id="result8"></p>
+        </form>
+      </div>
+      <div id="section9" class="section">
+        <h2>Fentanyl</h2>
+		  <h3>1 ampoule = 250 mcg/5mL</h3>
+		  <h4>Dose: 0.7 - 10 mcg/kg/h</h4>
+        <form onsubmit="calculateFentanilo(event)">
+          <label for="a3">Number of ampoules:</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a3" required><br>
+          <label for="b3">Dilution volume (mL):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b3" required><br>
+          <label for="c3">Weight (kg):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c3" required><br>
+          <label for="d3">Infusion rate (mL/h):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d3" required><br><br>
+          <button type="submit">Calculate dose</button>
+          <p id="result9"></p>
+        </form>
+      </div>
+      <div id="section10" class="section">
+        <h2>Remifentanil</h2>
+		  <h3>1 ampoule = 5 mg</h3>
+		  <h4>Dose: 3 - 18 mcg/kg/h</h4>
+        <form onsubmit="calculateRemifentanilo(event)">
+          <label for="a11">Number of ampoules:</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a11" required><br>
+          <label for="b11">Dilution volume (mL):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b11" required><br>
+          <label for="c11">Weight (kg):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c11" required><br>
+          <label for="d11">Infusion rate (mL/h):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d11" required><br><br>
+          <button type="submit">Calculate dose</button>
+          <p id="result10"></p>
+        </form>
+      </div>
+      <div id="section11" class="section">
+        <h2>Midazolam</h2>
+		  <h3>1 ampoule = 15 mg/3mL</h3>
+		  <h4>Dose: 0.02 - 0.2 mcg/kg/h</h4>
+        <form onsubmit="calculateMidazolam(event)">
+          <label for="a7">Number of ampoules:</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a7" required><br>
+          <label for="b7">Dilution volume (mL):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b7" required><br>
+          <label for="c7">Weight (kg):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c7" required><br>
+          <label for="d7">Infusion rate (mL/h):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d7" required><br><br>
+          <button type="submit">Calculate dose</button>
+          <p id="result11"></p>
+        </form>
+      </div>
+      <div id="section12" class="section">
+        <h2>Propofol</h2>
+		  <h3>1 ampoule = 200 mg/20 mL</h3>
+		  <h4>Empty infusion bag. Dose: 0.3 - 3 mcg/kg/h</h4>
+        <form onsubmit="calculatePropofol(event)">
+          <label for="a15">Number of ampoules:</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a15" required><br>
+          <label for="c15">Weight (kg):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c15" required><br>
+          <label for="d15">Infusion rate (mL/h):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d15" required><br><br>
+          <button type="submit">Calculate dose</button>
+          <p id="result12"></p>
+        </form>
+      </div>
+      <div id="section13" class="section">
+        <h2>Dexmedetomidine</h2>
+		  <h3>1 ampoule = 200 mcg/2 mL</h3>
+		  <h4>Dose: 0.2 - 1.4 mcg/kg/h</h4>
+        <form onsubmit="calculateDexmedetomidina(event)">
+          <label for="a23">Number of ampoules:</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a23" required><br>
+          <label for="b23">Dilution volume (mL):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b23" required><br>
+          <label for="c23">Weight (kg):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c23" required><br>
+          <label for="d23">Infusion rate (mL/h):</label>
+          <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d23" required><br><br>
+          <button type="submit">Calculate dose</button>
+          <p id="result13"></p>
+        </form>
+      </div>
+
+      <div id="section14" class="section">
+        <a href="#" onclick="agregarAInicio()"><img src="../infusion512.png">
+       <h2>Infusion Calculator</h2>
+       <h7>  Calculates doses of commonly used medications in the Intensive Care Unit based on the administered infusion rate.
+<pr>For educational purposes only. Always verify calculations and follow local clinical protocols.</h7>
+<h5>Created by <b>Eliseo Rodriguez Claus</b></h5>
+      <h6>
+  <a href="https://www.instagram.com/eliseo.rc/"
+     target="_blank"
+     rel="noopener"
+     onclick="gtag('event', 'click_instagram', { lugar: 'footer' });">
+    Instagram: @eliseo.rc
+  </a><br>      <a href="https://www.flaticon.com/free-icons/infusion" title="infusion icons">Infusion icons created by Freepik - Flaticon</a></h6>
+        
+      </div>
+
+      <div id="section15" class="section">
+        <h2>BIC Insulina</h2>
+        <h4>100 UI de Insulina cristalina en 100 mL SF</h4>
+        <label for="glucemiaInicial">Glucemia inicial (mg/dl):</label>
+        <input type="number" id="glucemiaInicial" min="0" step="1" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?"><br>
+        <button onclick="calcularTratamiento()" class="inicial">Calcular tratamiento inicial</button>
+        <p id="resultadoTratamiento1"></p>
+    
+        <div class="recuadro"><b>Ajustes (controles horarios):</b><br>
+        <label for="glucemiaActual">Glucemia actual:</label>
+        <input type="number" id="glucemiaActual" min="0" step="1" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?">
+        <br>
+        <label for="glucemiaPrevia">Glucemia previa:</label>
+        <input type="number" id="glucemiaPrevia" min="0" step="1" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?"><br>
+        <br><button onclick="evaluarTratamiento()" class="ajustes">Evaluar tratamiento</button>
+        <p id="resultadoTratamiento2"></p></div>
+
+        <div class="explicacion">- Objetivo: glucemias entre 100-150 mg/dl<br>
+          - Controles <b>horarios</b> hasta valores estables entre 100-150 mg/dl por >4 hs, luego cada 2 hs.<br>
+          - Alcanzada glucemia menor a 200 mg/dl iniciar goteo de Dextrosa 5% </br>
+          - Tratamiento de hipoglucemia: hipertonico glucosado 25% 1 ampoule c/ 15 min. hasta glucemia >60  mg/dl<br>
+          - Basado en la <a href="tabla.pdf">tabla de insulina</a>         
+        </div>
+
+      </div>
+
+      
+ <div id="section16" class="section">
+  <h2>Atracurium</h2>
+  <h3>1 ampoule = 50 mg / 5 mL</h3>
+  <h4>Dose: 5 - 20 mcg/kg/min</h4>
+  <form onsubmit="calculateAtracurio(event)">
+    <label for="a16">Number of ampoules:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a16" required><br>
+    <label for="b16">mL. de solución:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b16" required><br>
+    <label for="c16">Weight (kg):</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c16" required><br>
+    <label for="d16">Infusion rate (mL/h):</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d16" required><br><br>
+    <button type="submit">Calcular</button>
+    <p id="result16"></p>
+  </form>
+</div>
+
+<div id="section17" class="section">
+  <h2>Labetalol</h2>
+  <h3>1 ampoule = 20 mg</h3>
+  <h4>Dose: 0,5 - 2 mcg/min</h4>
+  <form onsubmit="calculateLabetalol(event)">
+    <label for="a17">Number of ampoules:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a17" required><br>
+    <label for="b17">mL. de solución:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b17" required><br>
+    <label for="d17">Infusion rate (mL/h):</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d17" required><br><br>
+    <button type="submit">Calcular</button>
+    <p id="result17"></p>
+  </form>
+</div>
+
+<div id="section18" class="section">
+  <h2>Sodium nitroprusside</h2>
+  <h3>1 ampoule = 50 mg</h3>
+  <h4>Dose: 0.5 - 8 mcg/kg/min</h4>
+  <form onsubmit="calculateNitroprusiato(event)">
+    <label for="a18">Number of ampoules:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a18" required><br>
+    <label for="b18">mL. de solución:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b18" required><br>
+    <label for="c18">Weight (kg):</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c18" required><br>
+    <label for="d18">Infusion rate (mL/h):</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d18" required><br><br>
+    <button type="submit">Calculate dose</button>
+    <p id="result18"></p>
+  </form>
+</div>
+    </div>
+   
+  </div></div>
+  <script src="../script.js"></script>
+	<script>
+  const canonical = document.getElementById("canonical");
+  canonical.href =
+    window.location.origin +
+    window.location.pathname.replace(/\/$/, "");
+</script>
+</body>
+</htmL>
