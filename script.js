@@ -1,3 +1,14 @@
+document.addEventListener("DOMContentLoaded", function () {
+  const lang = document.documentElement.lang;
+
+  if (lang === "es") {
+    document.getElementById("lang-es")?.classList.add("active");
+  }
+  if (lang === "en") {
+    document.getElementById("lang-en")?.classList.add("active");
+  }
+});
+
 // Helper para leer números con . o , (iOS friendly)
 function getNumber(id) {
   const input = document.getElementById(id);
