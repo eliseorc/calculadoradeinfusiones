@@ -439,3 +439,42 @@ img {
   width: 90%;
 }
 
+.coffee-float {
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+
+  z-index: 9999;
+
+  padding: 10px 16px;
+  border-radius: 999px;
+
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+
+  text-decoration: none;
+
+  background: rgba(246, 252, 60, 0.056);
+  backdrop-filter: blur(6px);
+
+  border: 1px solid rgba(0,0,0,0.15);
+  color: #333;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  transition: all 0.2s ease;
+}
+
+.coffee-float:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+/* === MODO OSCURO === */
+@media (prefers-color-scheme: dark) {
+  .coffee-float {
+    background: rgba(40, 40, 40, 0.9);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #ffffff;
+  }
+}
