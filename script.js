@@ -575,4 +575,8 @@ document.addEventListener('DOMContentLoaded', function () {
       theme: theme
     });
   }
+
+  gtag('event', 'donation_click', {
+  method: 'buy_me_a_coffee'
+});
 });
