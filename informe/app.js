@@ -36,7 +36,10 @@ function measureRow(leftLabel, leftValue, leftRef, rightLabel, rightValue, right
   return `<div class="measure-row"><div class="measure-label">${leftLabel}</div><div class="measure-value">${leftValue}</div><div class="measure-ref">${leftRef || ''}</div><div class="measure-label">${rightLabel}</div><div class="measure-value">${rightValue}</div><div class="measure-ref">${rightRef || ''}</div></div>`;
 }
 function measureHeading(text, asc = '') { return `<div class="measure-heading"><strong>${text}</strong><em>${asc}</em></div>`; }
-function descriptionRow(label, text) { return `<div class="description-row"><div class="description-label">${label}</div><div class="description-text editable" contenteditable="true">${escapeHtml(text)}</div></div>`; }
+function descriptionRow(label, text) {
+  const editableLabel = label === 'RAÍZ AÓRTICA:';
+  return `<div class="description-row"><div class="description-label${editableLabel ? ' editable' : ''}"${editableLabel ? ' contenteditable="true"' : ''}>${label}</div><div class="description-text editable" contenteditable="true">${escapeHtml(text)}</div></div>`;
+}
 function textNumber(n, decimals = 0) { return n == null ? null : fmt(n, decimals); }
 function autoDescriptions(data, c) {
   const sex = data.get('sex');
@@ -213,7 +216,7 @@ function plainReportText() {
   });
   const conclusionLines = Array.from(el('#conclusions').querySelectorAll('.conclusion-text'))
     .map(node => node.textContent.trim()).filter(Boolean);
-  return [
+  return `\n\n${[
     'MEDIDAS 2D:',
     paired('Diám. interno en diástole:', plainInput('lvDd', 'mm', 0), 'Diám. interno en sístole:', plainInput('lvDs', 'mm', 0)),
     paired('Fracción de acortamiento:', plainCalculated(c.shortening, '%', 0), 'Fracción de eyección:', plainInput('lvef', '%', 0)),
@@ -236,7 +239,7 @@ function plainReportText() {
     '', 'CONCLUSIONES:',
     ...conclusionLines,
     '', '', '\t\tDr. RODRIGUEZ CLAUS, ELISEO', '\t\tEsp. en Cardiología - MP 118.231'
-  ].join('\n');
+  ].join('\n')}`;
 }
 
 async function copyPlainReport() {
