@@ -298,7 +298,7 @@ el('#wordButton').addEventListener('click', async () => {
     button.textContent = 'Generando Word…';
     if (!window.html2canvas) throw new Error('No se cargó el generador de imagen');
     const report = el('#report');
-    await Promise.all(Array.from(report.images).map(image => image.complete ? Promise.resolve() : new Promise(resolve => {
+    await Promise.all(Array.from(report.querySelectorAll('img')).map(image => image.complete ? Promise.resolve() : new Promise(resolve => {
       image.addEventListener('load', resolve, { once: true });
       image.addEventListener('error', resolve, { once: true });
     })));
