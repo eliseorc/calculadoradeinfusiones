@@ -293,6 +293,7 @@ el('#wordButton').addEventListener('click', async () => {
   const button = el('#wordButton');
   const originalLabel = button.textContent;
   let hiddenNotice;
+  let hiddenNoPrint = [];
   try {
     button.disabled = true;
     button.textContent = 'Generando Word…';
@@ -305,8 +306,14 @@ el('#wordButton').addEventListener('click', async () => {
     if (document.fonts?.ready) await document.fonts.ready;
     hiddenNotice = report.querySelector('.notice');
     if (hiddenNotice) hiddenNotice.style.display = 'none';
+    hiddenNoPrint = Array.from(report.querySelectorAll('.no-print')).map(node => ({ node, display: node.style.display }));
+    hiddenNoPrint.forEach(({ node }) => { node.style.display = 'none'; });
     const canvas = await window.html2canvas(report, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false, imageTimeout: 15000 });
     const imageData = canvas.toDataURL('image/png').split(',')[1];
+    const pageWidth = 595, pageHeight = 842;
+    const imageScale = Math.min(pageWidth / canvas.width, pageHeight / canvas.height);
+    const wordImageWidth = Math.round(canvas.width * imageScale);
+    const wordImageHeight = Math.round(canvas.height * imageScale);
     const boundary = '----=_EcoInforme_' + Date.now();
     const wordDocument = [
       'MIME-Version: 1.0',
@@ -316,7 +323,7 @@ el('#wordButton').addEventListener('click', async () => {
       'Content-Type: text/html; charset="utf-8"',
       'Content-Location: file:///C:/EcoInforme.html',
       '',
-      '<!doctype html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--><style>@page Section1{size:210mm 297mm;margin:0;mso-header-margin:0;mso-footer-margin:0}div.Section1{page:Section1;width:595px;height:842px;margin:0;padding:0;overflow:hidden}html,body{width:595px;height:842px;margin:0!important;padding:0!important}img{display:block;width:595px!important;height:842px!important;margin:0!important;padding:0!important;border:0!important}</style></head><body><div class="Section1"><img src="file:///C:/EcoInforme.png" width="595" height="842" /></div></body></html>',
+      `<!doctype html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--><style>@page Section1{size:210mm 297mm;margin:0;mso-header-margin:0;mso-footer-margin:0}div.Section1{page:Section1;width:${pageWidth}px;height:${pageHeight}px;margin:0;padding:0;overflow:hidden}html,body{width:${pageWidth}px;height:${pageHeight}px;margin:0!important;padding:0!important}img{display:block;width:${wordImageWidth}px!important;height:${wordImageHeight}px!important;margin:0!important;padding:0!important;border:0!important}</style></head><body><div class="Section1"><img src="file:///C:/EcoInforme.png" width="${wordImageWidth}" height="${wordImageHeight}" /></div></body></html>`,
       '',
       `--${boundary}`,
       'Content-Type: image/png',
@@ -344,6 +351,7 @@ el('#wordButton').addEventListener('click', async () => {
       : `No se pudo generar la imagen visual del informe. No se descargó el Word alternativo para evitar un documento descompaginado. Detalle: ${detail}`);
   } finally {
     if (hiddenNotice) hiddenNotice.style.display = '';
+    hiddenNoPrint.forEach(({ node, display }) => { node.style.display = display; });
     button.disabled = false;
     button.textContent = originalLabel;
   }
