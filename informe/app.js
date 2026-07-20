@@ -268,6 +268,27 @@ el('#copyTextButton').addEventListener('click', async () => {
     window.prompt('Copiá este texto:', plainReportText());
   }
 });
+function wordTableFromReport() {
+  const metrics = Array.from(el('#metrics').querySelectorAll('.measure-heading, .measure-subhead, .measure-row')).map(node => {
+    if (node.classList.contains('measure-heading')) return `<tr class="word-band"><td colspan="6">${node.textContent.trim().replace(/\s+/g, ' ')}</td></tr>`;
+    if (node.classList.contains('measure-subhead')) return `<tr class="word-subhead"><td colspan="6">${escapeHtml(node.textContent.trim())}</td></tr>`;
+    return `<tr>${Array.from(node.children).map((cell, index) => `<td class="${index % 3 === 0 ? 'word-label' : index % 3 === 1 ? 'word-value' : 'word-ref'}">${escapeHtml(cell.textContent.trim())}</td>`).join('')}</tr>`;
+  }).join('');
+  const descriptions = Array.from(el('#description').querySelectorAll('.description-row')).map(row => {
+    const label = row.querySelector('.description-label')?.textContent.trim() || '';
+    const text = row.querySelector('.description-text')?.textContent.trim() || '';
+    return `<tr><td class="word-description-label">${escapeHtml(label)}</td><td>${escapeHtml(text)}</td></tr>`;
+  }).join('');
+  const conclusions = Array.from(el('#conclusions').querySelectorAll('.conclusion-text')).map(row => `<tr><td>${escapeHtml(row.textContent.trim())}</td></tr>`).join('');
+  const title = escapeHtml(el('#reportTitle').textContent.trim());
+  const patient = escapeHtml(el('#reportPatient').textContent.trim());
+  const date = escapeHtml(el('#reportDate').textContent.trim());
+  return `<!doctype html><html><head><meta charset="utf-8"><style>
+    @page Section1{size:595.3pt 841.9pt;margin:18pt 20pt 16pt}div.Section1{page:Section1}
+    body{margin:0;color:#183042;font-family:Arial,sans-serif;font-size:7.4pt;line-height:1.08}.banner{width:100%;height:37pt;object-fit:contain;object-position:left center;margin:0 0 7pt}.eyebrow{font-size:6.5pt;font-weight:bold;letter-spacing:1pt;color:#087a83;margin:0}.title{font-size:15pt;font-weight:bold;margin:1pt 0 4pt}.patient{font-size:8.5pt;font-weight:bold;margin:0}.date{font-size:8pt;margin:1pt 0 5pt}.rule{border-top:1.4pt solid #087a83;margin:0 0 5pt}.section{width:100%;border-collapse:collapse;margin:0 0 5pt;table-layout:fixed}.section td{padding:1.25pt 1.5pt;vertical-align:top}.word-band td{background:#e7f2f3;text-align:center;font-size:8.5pt;font-weight:bold;letter-spacing:1.5pt;padding:3pt}.word-subhead td{font-size:8pt;font-weight:bold;padding-top:4pt}.word-label{text-align:right;width:28%;white-space:nowrap}.word-value{width:10%;font-weight:bold;white-space:nowrap}.word-ref{width:12%;font-size:5.8pt;color:#697178;white-space:nowrap}.word-description-label{width:25%;text-align:right;font-weight:bold;white-space:nowrap}.description td{padding:1.4pt 2pt}.conclusions td{padding:1.4pt 2pt}.signature{display:block;margin:5pt 20pt 0 auto;width:105pt;max-height:65pt;object-fit:contain}
+  </style></head><body><div class="Section1"><img class="banner" src="https://calculadoradeinfusiones.com.ar/informe/assets/institutional-banner.png"><p class="eyebrow">INFORME</p><p class="title">${title}</p><p class="patient">${patient}</p><p class="date">${date}</p><div class="rule"></div><table class="section">${metrics}</table><table class="section description"><tr class="word-band"><td colspan="2">DESCRIPCIÓN</td></tr>${descriptions}</table><table class="section conclusions"><tr class="word-band"><td>CONCLUSIONES</td></tr>${conclusions}</table><img class="signature" src="https://calculadoradeinfusiones.com.ar/informe/assets/signature.png"></div></body></html>`;
+}
+
 el('#wordButton').addEventListener('click', async () => {
   const button = el('#wordButton');
   const originalLabel = button.textContent;
@@ -316,13 +337,7 @@ el('#wordButton').addEventListener('click', async () => {
     setTimeout(() => URL.revokeObjectURL(link.href), 1500);
   } catch (error) {
     console.error(error);
-    const reportCopy = el('#report').cloneNode(true);
-    reportCopy.querySelector('.notice')?.remove();
-    reportCopy.querySelectorAll('[contenteditable]').forEach(node => node.removeAttribute('contenteditable'));
-    const styles = Array.from(document.styleSheets).map(sheet => {
-      try { return Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n'); } catch { return ''; }
-    }).join('\n');
-    const fallbackDocument = `<!doctype html><html><head><meta charset="utf-8"><style>${styles}body{margin:0;background:#fff}.report{margin:0 auto;box-shadow:none}</style></head><body>${reportCopy.outerHTML}</body></html>`;
+    const fallbackDocument = wordTableFromReport();
     const fallbackBlob = new Blob([fallbackDocument], { type: 'application/msword' });
     const fallbackLink = document.createElement('a');
     fallbackLink.href = URL.createObjectURL(fallbackBlob);
