@@ -343,16 +343,10 @@ el('#wordButton').addEventListener('click', async () => {
     setTimeout(() => URL.revokeObjectURL(link.href), 1500);
   } catch (error) {
     console.error(error);
-    const fallbackDocument = wordTableFromReport();
-    const fallbackBlob = new Blob([fallbackDocument], { type: 'application/msword' });
-    const fallbackLink = document.createElement('a');
-    fallbackLink.href = URL.createObjectURL(fallbackBlob);
-    const patient = String(new FormData(form).get('patientName') || 'informe').replace(/[^a-z0-9áéíóúñ]+/gi, '_');
-    fallbackLink.download = `Ecocardiograma_${patient}.doc`;
-    document.body.appendChild(fallbackLink);
-    fallbackLink.click();
-    fallbackLink.remove();
-    setTimeout(() => URL.revokeObjectURL(fallbackLink.href), 1500);
+    const localFile = window.location.protocol === 'file:';
+    window.alert(localFile
+      ? 'El Word visual debe generarse desde la versión publicada. Abrí https://calculadoradeinfusiones.com.ar/informe/ y probá nuevamente.'
+      : 'No se pudo generar la imagen visual del informe. No se descargó el Word alternativo para evitar un documento descompaginado.');
   } finally {
     if (hiddenNotice) hiddenNotice.style.display = '';
     button.disabled = false;
