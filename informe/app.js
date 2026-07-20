@@ -344,9 +344,10 @@ el('#wordButton').addEventListener('click', async () => {
   } catch (error) {
     console.error(error);
     const localFile = window.location.protocol === 'file:';
+    const detail = String(error?.message || error?.name || 'motivo no informado').replace(/\s+/g, ' ').slice(0, 220);
     window.alert(localFile
-      ? 'El Word visual debe generarse desde la versión publicada. Abrí https://calculadoradeinfusiones.com.ar/informe/ y probá nuevamente.'
-      : 'No se pudo generar la imagen visual del informe. No se descargó el Word alternativo para evitar un documento descompaginado.');
+      ? `El Word visual debe generarse desde la versión publicada. Abrí https://calculadoradeinfusiones.com.ar/informe/ y probá nuevamente. Detalle: ${detail}`
+      : `No se pudo generar la imagen visual del informe. No se descargó el Word alternativo para evitar un documento descompaginado. Detalle: ${detail}`);
   } finally {
     if (hiddenNotice) hiddenNotice.style.display = '';
     button.disabled = false;
