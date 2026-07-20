@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EcoInforme</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <aside class="form-panel no-print">
+        <div class="form-intro">
+          <h2>INFORME</h2>
+          <p>Completar valores disponibles. Se actualiza automaticamente.</p>
+        </div>
+
+        <form id="ecoForm" autocomplete="off">
+          <section>
+            <h3>Paciente</h3>
+            <div class="fields two">
+              <label>Tipo de estudio<select name="doppler" autofocus><option value="No">Bidimensional</option><option value="Si" selected>Doppler 2D</option></select></label>
+              <label>Apellido y nombre<input name="patientName" placeholder="Apellido, Nombre" /></label>
+              <label>Fecha del estudio<input name="studyDate" type="date" /></label>
+              <label>Edad<input name="age" type="number" min="0" max="130" placeholder="Años" /></label>
+              <label>Sexo<select name="sex"><option value="">Seleccionar</option><option value="M">Masculino</option><option value="F">Femenino</option></select></label>
+              <label>Peso (kg)<input name="weight" type="number" min="1" step="0.1" /></label>
+              <label>Altura (cm)<input name="height" type="number" min="1" step="0.1" /></label>
+            </div>
+          </section>
+
+          <section>
+            <h3>Carga rápida de medidas</h3>
+            <p class="tab-help">Ingresá cada valor y presioná <kbd>Tab</kbd> para pasar al siguiente casillero.</p>
+            <div class="quick-fields">
+              <label>VI dias<input name="lvDd" inputmode="decimal" /></label><label>VI sist<input name="lvDs" inputmode="decimal" /></label>
+              <label>SIV<input name="ivsd" inputmode="decimal" /></label><label>PP<input name="pwd" inputmode="decimal" /></label>
+              <label>FEY<input name="lvef" inputmode="decimal" /></label><label>AO<input name="aorticRoot" inputmode="decimal" /></label>
+              <label>ApAo<input name="apAo" inputmode="decimal" /></label><label>AI<input name="la" inputmode="decimal" /></label>
+              <label>Area AI<input name="laArea" inputmode="decimal" /></label><label>Area AD<input name="raArea" inputmode="decimal" /></label>
+              <label>VD<input name="rv" inputmode="decimal" /></label><label>Tapse<input name="tapse" inputmode="decimal" /></label>
+              <label>VCI<input name="ivc" inputmode="decimal" /></label><label>E<input name="eWave" inputmode="decimal" /></label>
+              <label>A<input name="aWave" inputmode="decimal" /></label><label>E/e'<input name="ePrime" inputmode="decimal" /></label>
+              <label>IM<input name="mr" placeholder="-" /></label><label>IT<input name="tr" placeholder="-" /></label>
+              <label>GTT<input name="trGradient" inputmode="decimal" /></label><label>PAD<input name="rap" inputmode="decimal" /></label>
+              <label>Vmax AO<input name="avVmax" inputmode="decimal" /></label><label>IAo<input name="ar" placeholder="-" /></label>
+              <label>GM<input name="aorticMeanGradient" inputmode="decimal" /></label><label>Buena ventana<select name="goodWindow"><option value="Si" selected>Si</option><option value="No">No</option></select></label>
+              <label>Arteria pulm:<input name="pulmonaryArtery" placeholder="-" /></label><label>Marcapasos:<input name="pacemaker" placeholder="No" /></label>
+              <label>Volumen AI:<input name="laVolume" inputmode="decimal" /></label><label>Shunts:<input name="shunts" placeholder="-" /></label>
+            </div>
+          </section>
+
+          <section class="stenosis-section">
+            <h3>Área valvular aórtica</h3>
+            <div class="stenosis-fields">
+              <label>Diam TSVI<input name="lvotDiam" inputmode="decimal" placeholder="cm" /></label>
+              <label>VTI TSVI<input name="lvotVti" inputmode="decimal" placeholder="cm" /></label>
+              <label>VTI Aórtico<input name="avVti" inputmode="decimal" placeholder="cm" /></label>
+              <div class="calc-field"><span>Área valvular aórtica</span><strong id="avaResult">—</strong></div>
+              <div class="calc-field"><span>Cociente adimensional</span><strong id="dimensionlessResult">—</strong></div>
+            </div>
+          </section>
+
+          <div class="form-actions"><button class="secondary" id="clearButton" type="button">Limpiar formulario</button></div>
+        </form>
+      </aside>
+
+      <section class="report-wrap">
+        <article class="report" id="report">
+          <img class="institutional-banner" src="assets/institutional-banner.png" alt="Sanatorio Argentino — Servicio de Ecografía" />
+          <div class="report-header">
+            <div><p class="eyebrow">INFORME</p><h2 id="reportTitle" class="editable" contenteditable="true">ECOCARDIOGRAMA BIDIMENSIONAL</h2></div>
+          </div>
+          <div class="patient-line"><strong id="reportPatient">Apellido y nombre: —</strong><p id="reportDate"></p></div>
+          <div class="notice">Borrador automático: revisar, completar y validar clínicamente antes de emitir.</div>
+          <section class="report-section report-measures"><div class="metrics" id="metrics"></div></section>
+          <section class="report-section description-section">
+            <div class="description-title"><button class="secondary no-print" id="regenerateButton" type="button">Regenerar texto</button></div>
+            <div id="description" class="description-grid"></div>
+          </section>
+          <section class="report-section conclusion">
+            <div class="description-title"><button class="secondary no-print" id="regenerateConclusionsButton" type="button">Regenerar texto</button></div>
+            <div id="conclusions" class="conclusion-grid"></div>
+          </section>
+          <div class="signature"><img src="assets/signature.png" alt="Firma y sello del Dr. Eliseo Rodríguez Claus" /></div>
+        </article>
+        <div class="report-actions no-print"><button class="secondary" id="copyTextButton" type="button">Copiar texto simple</button><button class="secondary" id="wordButton" type="button">Descargar Word visual</button><button class="primary" id="printButton" type="button">Generar PDF / Imprimir</button></div>
+      </section>
+    </main>
+    <script src="assets/html2canvas.min.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
