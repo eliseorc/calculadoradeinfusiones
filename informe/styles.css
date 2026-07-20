@@ -30,3 +30,23 @@
 .quick-fields{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;border-bottom:1px solid var(--line)}.quick-fields label{margin:0;border-bottom:1px solid var(--line)}.report{padding:12mm 13mm;min-height:0}.report-header{padding-bottom:5px}.report-header h2{font-size:18px}.patient-line{padding:6px 0 5px;font-size:12px}.notice{padding:4px 6px;font-size:9px}.report-section{padding-top:7px}.report-measures{padding-top:7px}.measure-heading{height:19px;font-size:9px}.measure-subhead{font-size:9px;padding:3px 5px 1px}.measure-row{min-height:16px;font-size:8px}.measure-row>div{padding:1px 3px}.measure-ref{font-size:6.5px}.description-title{margin-bottom:2px}.description-title button{padding:3px 6px;font-size:9px}.description-grid .measure-heading{height:19px}.description-row .description-label,.description-row .description-text{min-height:21px;padding:2px 5px;font-size:10px;line-height:1.2}.conclusion{margin-top:5px}.conclusion-heading{height:19px;font-size:9px}.conclusion-text{min-height:20px;padding:2px 6px;font-size:10px;line-height:1.2}.signature{height:52px;margin-top:16px;font-size:9px}
 .signature{width:145px!important;height:82px!important;margin:12px 34px 0 auto!important;border:0!important;padding:0!important;display:flex!important;align-items:flex-end!important;justify-content:flex-end!important}.signature img{display:block;max-width:100%;max-height:82px;width:auto;height:auto;object-fit:contain}
 .conclusion-text{padding-left:16px!important}
+
+/* Ajustes tipográficos del informe */
+.patient-line,.patient-line #reportDate{font-size:15px!important}
+.metrics>.measure-heading,.doppler-block>.measure-heading,.description-grid .measure-heading,.conclusion-heading{font-size:12px!important;height:19px!important}
+.metrics .measure-row{font-size:12px!important}
+.metrics .measure-ref{font-size:8px!important}
+.description-row .description-label,.description-row .description-text,.conclusion-text{font-size:12px!important}
+
+/* Acción principal de carga y cálculo aórtico en estilo neutro */
+.form-actions{display:flex;justify-content:center;padding:16px 0!important}
+.stenosis-section{border:1px solid var(--line)!important}
+.stenosis-section h3{color:var(--ink)!important;background:#fff!important}
+.stenosis-fields label,.stenosis-fields .calc-field{background:#fff!important;color:var(--ink)!important}
+.stenosis-fields input{background:#fff!important}
+
+.quick-calculated{display:grid;grid-template-columns:1fr 42%;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--line);font-size:15px;font-weight:650;color:#263e4b;text-align:right}
+.quick-calculated strong{text-align:left;padding:5px 8px;min-height:32px;border:1px solid #cbd9df;border-radius:6px;background:#f4f7f8;display:flex;align-items:center}
+.quick-placeholder{border-bottom:1px solid var(--line)}
+.data-check{margin:10px 0 0;padding:7px 9px;border-left:3px solid #d7a627;background:#fff8dd;color:#705300;font-size:12px;line-height:1.25}
+.data-check[hidden]{display:none}

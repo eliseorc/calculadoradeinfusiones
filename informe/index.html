@@ -27,6 +27,7 @@
               <label>Altura (cm)<input name="height" type="number" min="1" step="0.1" /></label>
               <label>Buena ventana<select name="goodWindow"><option value="Si" selected>Si</option><option value="No">No</option></select></label>
             </div>
+            <p class="data-check" id="dataCheck" role="status" aria-live="polite"></p>
           </section>
 
           <section>
@@ -44,11 +45,14 @@
               <label>IM<input name="mr" placeholder="-" /></label><label>IT<input name="tr" placeholder="-" /></label>
               <label>GTT<input name="trGradient" inputmode="decimal" /></label><label>PAD<input name="rap" inputmode="decimal" /></label>
               <label>Vmax AO<input name="avVmax" inputmode="decimal" /></label><label>IAo<input name="ar" placeholder="-" /></label>
-              <label>GM<input name="aorticMeanGradient" inputmode="decimal" /></label>
-              <label>Arteria pulm:<input name="pulmonaryArtery" placeholder="-" /></label><label>Marcapasos:<input name="pacemaker" placeholder="No" /></label>
-              <label>Volumen AI:<input name="laVolume" inputmode="decimal" /></label><label>Shunts:<input name="shunts" placeholder="-" /></label>
+              <label>GM<input name="aorticMeanGradient" inputmode="decimal" /></label><label>Arteria pulm:<select name="pulmonaryArtery"><option value="-" selected>-</option><option value="ok">OK</option></select></label>
+              <label>Marcapasos:<select name="pacemaker"><option value="No" selected>No</option><option value="Si">Si</option></select></label><label>Shunts:<input name="shunts" placeholder="-" /></label>
+              <label>Volumen AI:<input name="laVolume" inputmode="decimal" placeholder="ml" /></label><div class="quick-calculated"><span>Vol. AI indexado:</span><strong id="laVolumeIndexResult">—</strong></div>
+              <div class="quick-calculated"><span>PW:</span><strong id="wedgePressureResult">—</strong></div><div class="quick-placeholder" aria-hidden="true"></div>
             </div>
           </section>
+
+          <div class="form-actions"><button class="secondary" id="clearButton" type="button">Limpiar formulario</button></div>
 
           <section class="stenosis-section">
             <h3>Área valvular aórtica</h3>
@@ -60,8 +64,6 @@
               <div class="calc-field"><span>Cociente adimensional</span><strong id="dimensionlessResult">—</strong></div>
             </div>
           </section>
-
-          <div class="form-actions"><button class="secondary" id="clearButton" type="button">Limpiar formulario</button></div>
         </form>
       </aside>
 
