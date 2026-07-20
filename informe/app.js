@@ -305,7 +305,13 @@ el('#wordButton').addEventListener('click', async () => {
     if (document.fonts?.ready) await document.fonts.ready;
     hiddenNotice = report.querySelector('.notice');
     if (hiddenNotice) hiddenNotice.style.display = 'none';
-    const canvas = await window.html2canvas(report, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false, imageTimeout: 15000 });
+    let canvas;
+    try {
+      canvas = await window.html2canvas(report, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false, imageTimeout: 15000, foreignObjectRendering: true });
+      canvas.toDataURL('image/png');
+    } catch (visualCaptureError) {
+      canvas = await window.html2canvas(report, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false, imageTimeout: 15000 });
+    }
     const imageData = canvas.toDataURL('image/png').split(',')[1];
     const boundary = '----=_EcoInforme_' + Date.now();
     const wordDocument = [
