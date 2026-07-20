@@ -274,7 +274,14 @@ el('#wordButton').addEventListener('click', async () => {
   try {
     button.disabled = true;
     button.textContent = 'Generando Word…';
-    const canvas = await window.html2canvas(el('#report'), { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
+    if (!window.html2canvas) throw new Error('No se cargó el generador de imagen');
+    const report = el('#report');
+    await Promise.all(Array.from(report.images).map(image => image.complete ? Promise.resolve() : new Promise(resolve => {
+      image.addEventListener('load', resolve, { once: true });
+      image.addEventListener('error', resolve, { once: true });
+    })));
+    if (document.fonts?.ready) await document.fonts.ready;
+    const canvas = await window.html2canvas(report, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false, imageTimeout: 15000 });
     const imageData = canvas.toDataURL('image/png').split(',')[1];
     const boundary = '----=_EcoInforme_' + Date.now();
     const wordDocument = [
@@ -285,7 +292,7 @@ el('#wordButton').addEventListener('click', async () => {
       'Content-Type: text/html; charset="utf-8"',
       'Content-Location: file:///C:/EcoInforme.html',
       '',
-      '<!doctype html><html xmlns:o="urn:schemas-microsoft-com:office:office"><head><meta charset="utf-8"></head><body style="margin:0"><img src="file:///C:/EcoInforme.png" style="display:block;width:100%;height:auto" /></body></html>',
+      '<!doctype html><html xmlns:o="urn:schemas-microsoft-com:office:office"><head><meta charset="utf-8"><style>@page Section1{size:595.3pt 841.9pt;margin:0}div.Section1{page:Section1;width:595.3pt;height:841.9pt;margin:0;padding:0;overflow:hidden}img{display:block;width:595.3pt;height:841.9pt;margin:0;padding:0;border:0}</style></head><body style="margin:0;padding:0"><div class="Section1"><img src="file:///C:/EcoInforme.png" width="794" height="1123" /></div></body></html>',
       '',
       `--${boundary}`,
       'Content-Type: image/png',
@@ -311,7 +318,7 @@ el('#wordButton').addEventListener('click', async () => {
     const styles = Array.from(document.styleSheets).map(sheet => {
       try { return Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n'); } catch { return ''; }
     }).join('\n');
-    const fallbackDocument = `<!doctype html><html><head><meta charset="utf-8"><style>${styles}body{margin:0;background:#fff}.report{margin:0 auto;box-shadow:none}</style></head><body>${reportCopy.outerHTML}</body></html>`;
+    const fallbackDocument = `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:A4;margin:0}html,body{width:210mm;height:297mm;margin:0;padding:0;overflow:hidden;background:#fff}${styles}.report{width:210mm!important;min-height:0!important;margin:0!important;padding:12mm 13mm!important;box-shadow:none!important;zoom:.78}.report *{max-width:100%}</style></head><body>${reportCopy.outerHTML}</body></html>`;
     const fallbackBlob = new Blob([fallbackDocument], { type: 'application/msword' });
     const fallbackLink = document.createElement('a');
     fallbackLink.href = URL.createObjectURL(fallbackBlob);
