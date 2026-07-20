@@ -316,7 +316,7 @@ el('#wordButton').addEventListener('click', async () => {
       'Content-Type: text/html; charset="utf-8"',
       'Content-Location: file:///C:/EcoInforme.html',
       '',
-      '<!doctype html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--><style>@page Section1{size:595.3pt 841.9pt;margin:0pt;mso-header-margin:0pt;mso-footer-margin:0pt}div.Section1{page:Section1;width:595.3pt;height:841.9pt;margin:0;padding:0;overflow:hidden}html,body{width:595.3pt;height:841.9pt;margin:0!important;padding:0!important}img{display:block;width:595.3pt!important;height:841.9pt!important;margin:0!important;padding:0!important;border:0!important}</style></head><body><div class="Section1"><img src="file:///C:/EcoInforme.png" width="794" height="1123" /></div></body></html>',
+      '<!doctype html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--><style>@page Section1{size:210mm 297mm;margin:0;mso-header-margin:0;mso-footer-margin:0}div.Section1{page:Section1;width:595px;height:842px;margin:0;padding:0;overflow:hidden}html,body{width:595px;height:842px;margin:0!important;padding:0!important}img{display:block;width:595px!important;height:842px!important;margin:0!important;padding:0!important;border:0!important}</style></head><body><div class="Section1"><img src="file:///C:/EcoInforme.png" width="595" height="842" /></div></body></html>',
       '',
       `--${boundary}`,
       'Content-Type: image/png',
