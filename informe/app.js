@@ -318,7 +318,7 @@ el('#wordButton').addEventListener('click', async () => {
     const styles = Array.from(document.styleSheets).map(sheet => {
       try { return Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n'); } catch { return ''; }
     }).join('\n');
-    const fallbackDocument = `<!doctype html><html><head><meta charset="utf-8"><style>@page{size:A4;margin:0}html,body{width:210mm;height:297mm;margin:0;padding:0;overflow:hidden;background:#fff}${styles}.report{width:210mm!important;min-height:0!important;margin:0!important;padding:12mm 13mm!important;box-shadow:none!important;zoom:.78}.report *{max-width:100%}</style></head><body>${reportCopy.outerHTML}</body></html>`;
+    const fallbackDocument = `<!doctype html><html><head><meta charset="utf-8"><style>${styles}body{margin:0;background:#fff}.report{margin:0 auto;box-shadow:none}</style></head><body>${reportCopy.outerHTML}</body></html>`;
     const fallbackBlob = new Blob([fallbackDocument], { type: 'application/msword' });
     const fallbackLink = document.createElement('a');
     fallbackLink.href = URL.createObjectURL(fallbackBlob);
