@@ -263,6 +263,56 @@ el('#clearButton').addEventListener('click', () => {
 });
 el('#printButton').addEventListener('click', () => window.print());
 
+el('#pdfButton').addEventListener('click', async () => {
+  const button = el('#pdfButton');
+  const originalLabel = button.textContent;
+  let hiddenNotice;
+  let hiddenNoPrint = [];
+  try {
+    button.disabled = true;
+    button.textContent = 'Generando PDF…';
+    if (!window.html2canvas || !window.jspdf?.jsPDF) throw new Error('No se cargó el generador de PDF');
+    const report = el('#report');
+    await Promise.all(Array.from(report.querySelectorAll('img')).map(image => image.complete ? Promise.resolve() : new Promise(resolve => {
+      image.addEventListener('load', resolve, { once: true });
+      image.addEventListener('error', resolve, { once: true });
+    })));
+    if (document.fonts?.ready) await document.fonts.ready;
+    hiddenNotice = report.querySelector('.notice');
+    if (hiddenNotice) hiddenNotice.style.display = 'none';
+    hiddenNoPrint = Array.from(report.querySelectorAll('.no-print')).map(node => ({ node, display: node.style.display }));
+    hiddenNoPrint.forEach(({ node }) => { node.style.display = 'none'; });
+
+    const canvas = await window.html2canvas(report, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false, imageTimeout: 15000 });
+    const pdf = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+    const margin = 8;
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const contentWidth = pageWidth - (margin * 2);
+    const contentHeight = pageHeight - (margin * 2);
+    const imageHeight = (canvas.height * contentWidth) / canvas.width;
+    const imageData = canvas.toDataURL('image/jpeg', 0.96);
+    let offset = 0;
+    let page = 0;
+    while (offset < imageHeight - 0.1) {
+      if (page > 0) pdf.addPage();
+      pdf.addImage(imageData, 'JPEG', margin, margin - offset, contentWidth, imageHeight, undefined, 'FAST');
+      offset += contentHeight;
+      page += 1;
+    }
+    const patient = String(new FormData(form).get('patientName') || 'informe').replace(/[^a-z0-9áéíóúñ]+/gi, '_');
+    pdf.save(`Ecocardiograma_${patient}.pdf`);
+  } catch (error) {
+    console.error(error);
+    window.alert('No se pudo generar el PDF. Probá recargar la página e intentarlo nuevamente.');
+  } finally {
+    if (hiddenNotice) hiddenNotice.style.display = '';
+    hiddenNoPrint.forEach(({ node, display }) => { node.style.display = display; });
+    button.disabled = false;
+    button.textContent = originalLabel;
+  }
+});
+
 function plainReportText() {
   const data = new FormData(form);
   const c = calculate(data);
