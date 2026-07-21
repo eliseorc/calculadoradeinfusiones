@@ -15,7 +15,7 @@ function calculate(data) {
   const asc = weight && height ? Math.sqrt((weight * height) / 3600) : null;
   const dd = number(data, 'lvDd'), ds = number(data, 'lvDs'), ivsd = number(data, 'ivsd'), pwd = number(data, 'pwd');
   const shortening = dd && ds ? ((dd - ds) / dd) * 100 : null;
-  const mass = asc && dd && ivsd && pwd ? (0.8 * 1.04 * (((dd + ivsd + pwd) ** 3) - (dd ** 3)) + 0.6) / asc / 1000 : null;
+  const mass = asc && dd && ivsd && pwd ? ((0.8 * 1.04 * (((dd + ivsd + pwd) ** 3) - (dd ** 3))) / 1000 + 0.6) / asc : null;
   const rwt = dd && pwd ? (2 * pwd) / dd : null;
   const trGradient = number(data, 'trGradient'), rap = number(data, 'rap');
   const psap = trGradient && rap ? trGradient + rap : null;
@@ -48,18 +48,42 @@ function descriptionRow(label, text) {
   return `<div class="description-row"><div class="description-label${editableLabel ? ' editable' : ''}"${editableLabel ? ' contenteditable="true"' : ''}>${label}</div><div class="description-text editable" contenteditable="true">${highlightedDescription(text)}</div></div>`;
 }
 function textNumber(n, decimals = 0) { return n == null ? null : fmt(n, decimals); }
+function leftVentricleGeometry(sex, mass, rwt) {
+  const thresholds = sex === 'M'
+    ? { normal: 115, mild: 131, moderate: 148 }
+    : sex === 'F'
+      ? { normal: 95, mild: 108, moderate: 121 }
+      : null;
+  if (mass == null || !thresholds) return null;
+
+  const severity = mass <= thresholds.normal ? null
+    : mass <= thresholds.mild ? 'leve'
+      : mass <= thresholds.moderate ? 'moderada'
+        : 'severa';
+  const pattern = rwt == null ? null : rwt > 0.42 ? 'concéntrica' : 'excéntrica';
+  // Umbral operativo más estricto para emitir "remodelado concéntrico" automático.
+  const remodeling = !severity && rwt != null && rwt > 0.45;
+  return { severity, pattern, remodeling };
+}
 function autoDescriptions(data, c) {
   const sex = data.get('sex');
   const age = number(data, 'age');
   const dd = number(data, 'lvDd'); const ef = number(data, 'lvef'); const mass = c.mass;
-  const maleLimits = [116, 132, 148], femaleLimits = [96, 109, 122];
-  const limits = sex === 'M' ? maleLimits : sex === 'F' ? femaleLimits : null;
+  const geometry = leftVentricleGeometry(sex, mass, c.rwt);
   let left = 'Completar medidas del ventrículo izquierdo.';
-  if (dd && ef && mass && limits) {
+  if (dd && ef && mass && geometry) {
     const functionText = ef >= 55 ? 'función sistólica conservada' : 'función sistólica a valorar';
     const sizeText = dd <= 56 ? '' : 'con dilatación ventricular, ';
-    const hypertrophy = mass < limits[0] ? 'Ventrículo de dimensiones y ' : mass <= limits[1] ? 'Leve hipertrofia concéntrica con ' : mass <= limits[2] ? 'Hipertrofia concéntrica moderada con ' : 'Hipertrofia concéntrica severa con ';
-    left = `${sizeText}${hypertrophy}${functionText}. IMVI ${textNumber(mass)} g/m².`;
+    if (geometry.remodeling) {
+      left = `${sizeText}Ventrículo con remodelado concéntrico y ${functionText}. IMVI ${textNumber(mass)} g/m². EPR ${textNumber(c.rwt, 2)}.`;
+    } else if (geometry.severity) {
+      const hypertrophy = geometry.severity === 'leve'
+        ? `Leve hipertrofia ${geometry.pattern || 'de geometría a valorar'} con `
+        : `Hipertrofia ${geometry.pattern || 'de geometría a valorar'} ${geometry.severity} con `;
+      left = `${sizeText}${hypertrophy}${functionText}. IMVI ${textNumber(mass)} g/m².${c.rwt != null ? ` EPR ${textNumber(c.rwt, 2)}.` : ''}`;
+    } else {
+      left = `${sizeText}Ventrículo de dimensiones y ${functionText}. IMVI ${textNumber(mass)} g/m².`;
+    }
   }
   const motion = data.get('goodWindow').toLowerCase() === 'si' ? 'No se evidenciaron alteraciones de motilidad parietal en reposo.' : 'En reposo no impresiona presentar alteraciones de motilidad parietal (ventana acústica subóptima).';
   const relaxation = c.eOverA == null ? '' : c.eOverA >= 1 ? 'Patrón diastólico de relajación normal.' : 'Patrón diastólico de relajación prolongada.';
@@ -76,7 +100,13 @@ function autoDescriptions(data, c) {
     if (String(data.get('pulmonaryArtery')).toLowerCase() === 'ok') right += ' Arteria pulmonar de diámetro conservado.';
   }
   const laArea = number(data, 'laArea'); const raArea = number(data, 'raArea');
-  const la = !laArea ? 'Completar área de aurícula izquierda.' : laArea <= 20 ? `Normal. Área: ${textNumber(laArea)} cm².` : laArea < 30 ? `Leve dilatación. Área: ${textNumber(laArea)} cm².` : laArea < 40 ? `Dilatación moderada. Área: ${textNumber(laArea)} cm².` : `Dilatación severa. Área: ${textNumber(laArea)} cm².`;
+  const normalLaVolumeDespiteArea = laArea > 20 && c.laVolumeIndex != null && c.laVolumeIndex <= 34;
+  const la = !laArea ? 'Completar área de aurícula izquierda.'
+    : normalLaVolumeDespiteArea ? `Normal. Si bien área: ${textNumber(laArea)} cm², volumen: ${textNumber(c.laVolumeIndex)} ml/m².`
+      : laArea <= 20 ? `Normal. Área: ${textNumber(laArea)} cm².`
+        : laArea < 30 ? `Leve dilatación. Área: ${textNumber(laArea)} cm².`
+          : laArea < 40 ? `Dilatación moderada. Área: ${textNumber(laArea)} cm².`
+            : `Dilatación severa. Área: ${textNumber(laArea)} cm².`;
   const ra = !raArea ? 'Completar área de aurícula derecha.' : raArea <= 18 ? `Normal. Área: ${textNumber(raArea)} cm².` : `Dilatada. Área: ${textNumber(raArea)} cm².`;
   const mr = String(data.get('mr') || '').toLowerCase();
   const isDoppler = data.get('doppler') === 'Si';
@@ -117,13 +147,16 @@ function renderDescriptions(data, c, force = false) {
 }
 function autoConclusions(data, c) {
   const sex = data.get('sex'); const dd = number(data, 'lvDd'); const ef = number(data, 'lvef'); const mass = c.mass;
-  const limits = sex === 'M' ? [116, 132, 148] : sex === 'F' ? [96, 109, 122] : null;
+  const geometry = leftVentricleGeometry(sex, mass, c.rwt);
   const conclusions = [];
-  if (dd && ef && mass && limits && dd <= 56 && ef >= 55) {
-    if (mass < limits[0]) conclusions.push('Ventrículo izquierdo de dimensiones y función sistólica conservada.');
-    else if (mass <= limits[1]) conclusions.push('Ventrículo izquierdo con leve hipertrofia concéntrica y función sistólica conservada.');
-    else if (mass <= limits[2]) conclusions.push('Ventrículo izquierdo con hipertrofia concéntrica moderada y función sistólica conservada.');
-    else conclusions.push('Ventrículo izquierdo con hipertrofia concéntrica severa y función sistólica conservada.');
+  if (dd && ef && mass && geometry && dd <= 56 && ef >= 55) {
+    if (geometry.remodeling) conclusions.push('Ventrículo izquierdo con remodelado concéntrico y función sistólica conservada.');
+    else if (geometry.severity) {
+      const hypertrophy = geometry.severity === 'leve'
+        ? `leve hipertrofia ${geometry.pattern || 'de geometría a valorar'}`
+        : `hipertrofia ${geometry.pattern || 'de geometría a valorar'} ${geometry.severity}`;
+      conclusions.push(`Ventrículo izquierdo con ${hypertrophy} y función sistólica conservada.`);
+    } else conclusions.push('Ventrículo izquierdo de dimensiones y función sistólica conservada.');
   } else if (dd || ef || mass) conclusions.push('Ventrículo izquierdo: completar valoración según medidas y función sistólica.');
   if (c.eOverA != null) {
     if (c.eOverA < 1) conclusions.push('Disfunción diastólica tipo 1.');
@@ -184,7 +217,7 @@ function render() {
     measureRow('Diámetro interno de VI en diástole:', val('lvDd','mm',0), '[&lt;55 mm]', 'Diámetro interno en sístole:', val('lvDs','mm',0), ''),
     measureRow('Fracción de acortamiento:', calculated(c.shortening,'%',0), '[&gt;28%]', 'Fracción de eyección:', val('lvef','%',0), '[&gt;55%]'),
     measureRow('Septum interventricular en diástole:', val('ivsd','mm',0), '[&lt;12 mm]', 'Pared posterior en diástole:', val('pwd','mm',0), '[&lt;12 mm]'),
-    measureRow('Índice de masa ventricular:', calculated(c.mass,'g/m²',0), '[♂&lt;115 / ♀&lt;95 g/m²]', 'Espesor parietal relativo:', calculated(c.rwt,'',1), '[&lt;0,45]'),
+    measureRow('Índice de masa ventricular:', calculated(c.mass,'g/m²',0), '[♂≤115 / ♀≤95 g/m²]', 'Espesor parietal relativo:', calculated(c.rwt,'',2), '[≤0,42]'),
     measureRow('Diám. de aurícula izq.:', val('la','mm',0), '[&lt;40 mm]', 'Área de aurícula izquierda:', val('laArea','cm²',0), '[&lt;20 cm²]'),
     measureRow('Ap. Valv Aórtica:', val('apAo','mm',0), '', 'Diámetro de raíz de aorta:', val('aorticRoot','mm',0), '[&lt;36 mm]'),
     '<div class="measure-subhead">VENTRÍCULO DERECHO:</div>',
