@@ -51,6 +51,7 @@
 .data-check{margin:10px 0 0;padding:7px 9px;border-left:3px solid #d7a627;background:#fff8dd;color:#705300;font-size:12px;line-height:1.25}
 .data-check[hidden]{display:none}
 
+
 /* Misma distancia entre líneas dentro de descripción y conclusiones */
 .description-row .description-label,.description-row .description-text,.conclusion-text{padding-top:0!important;padding-bottom:0!important;line-height:1.4!important}
 

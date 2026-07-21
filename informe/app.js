@@ -172,7 +172,7 @@ function render() {
   const val = (key, unit = '', decimals = 1) => reportValue(data, key, unit, decimals);
   const calculated = (num, unit = '', decimals = 1) => num == null ? '—' : `${fmt(num, decimals)}${unit ? ` ${unit}` : ''}`;
   const relaxation = c.eOverA == null ? '—' : c.eOverA >= 1 ? 'Normal' : 'Prolongada';
-  const pulmonaryHypertension = c.psap == null ? '—' : c.psap < 36 ? 'No' : 'Sí';
+  const pulmonaryHypertension = data.get('doppler') !== 'Si' ? '—' : c.psap == null || c.psap < 36 ? 'No' : 'Sí';
   el('#metrics').innerHTML = [
     measureHeading('M E D I D A S&nbsp;&nbsp; 2 D', c.asc ? `ASC: ${fmt(c.asc, 0)} m²` : ''),
     '<div class="measure-subhead">CAVIDADES IZQUIERDAS:</div>',
@@ -228,7 +228,7 @@ function plainReportText() {
   const plainCalculated = (n, unit = '', decimals = 1) => n == null ? '-' : `${fmt(n, decimals)}${unit ? ` ${unit}` : ''}`;
   const manual = (field, automatic) => String(manualMetricEdits[field] ?? automatic ?? '-').trim() || '-';
   const relaxation = manual('relaxation', c.eOverA == null ? '-' : c.eOverA >= 1 ? 'Normal' : 'Prolongada');
-  const pulmonaryHypertension = manual('pulmonaryHypertension', c.psap == null ? '-' : c.psap < 36 ? 'No' : 'Sí');
+  const pulmonaryHypertension = manual('pulmonaryHypertension', data.get('doppler') !== 'Si' ? '-' : c.psap == null || c.psap < 36 ? 'No' : 'Sí');
   const paired = (leftLabel, leftValue, rightLabel = '', rightValue = '') => `${leftLabel}\t${leftValue}\t\t${rightLabel}${rightLabel ? '\t' + rightValue : ''}`;
   const tripled = (leftLabel, leftValue, middleLabel, middleValue, rightLabel, rightValue) => `${leftLabel}\t${leftValue}\t\t${middleLabel}\t${middleValue}\t\t${rightLabel}\t${rightValue}`;
   const descriptionNames = {
