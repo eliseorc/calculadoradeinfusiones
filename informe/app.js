@@ -7,6 +7,7 @@ const number = (data, key) => {
   return Number.isFinite(v) && v > 0 ? v : null;
 };
 const fmt = (value, decimals = 0) => value == null || !Number.isFinite(value) ? '—' : value.toLocaleString('es-AR', { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
+const fmtUpTo = (value, decimals = 2) => value == null || !Number.isFinite(value) ? '—' : value.toLocaleString('es-AR', { maximumFractionDigits: decimals, minimumFractionDigits: 0 });
 const value = (data, key) => data.get(key) || '—';
 
 function calculate(data) {
@@ -39,9 +40,12 @@ function measureRow(leftLabel, leftValue, leftRef, rightLabel, rightValue, right
   return `<div class="measure-row"><div class="measure-label">${leftLabel}</div><div class="measure-value">${leftValue}</div><div class="measure-ref">${leftRef || ''}</div><div class="measure-label">${rightLabel}</div><div class="measure-value">${rightValue}</div><div class="measure-ref">${rightRef || ''}</div></div>`;
 }
 function measureHeading(text, asc = '') { return `<div class="measure-heading"><strong>${text}</strong><em>${asc}</em></div>`; }
+function highlightedDescription(text) {
+  return escapeHtml(text).replace(/(Completar[^.]*\.)/g, '<span class="missing-description">$1</span>');
+}
 function descriptionRow(label, text) {
   const editableLabel = label === 'RAÍZ AÓRTICA:';
-  return `<div class="description-row"><div class="description-label${editableLabel ? ' editable' : ''}"${editableLabel ? ' contenteditable="true"' : ''}>${label}</div><div class="description-text editable" contenteditable="true">${escapeHtml(text)}</div></div>`;
+  return `<div class="description-row"><div class="description-label${editableLabel ? ' editable' : ''}"${editableLabel ? ' contenteditable="true"' : ''}>${label}</div><div class="description-text editable" contenteditable="true">${highlightedDescription(text)}</div></div>`;
 }
 function textNumber(n, decimals = 0) { return n == null ? null : fmt(n, decimals); }
 function autoDescriptions(data, c) {
@@ -73,26 +77,29 @@ function autoDescriptions(data, c) {
   const isDoppler = data.get('doppler') === 'Si';
   const mitralBase = age && age > 80 ? 'Esclerocalcificación del anillo valvular, con apertura conservada.' : age && age > 60 ? 'De valvas finas, con ligera esclerosis del anillo valvular, apertura conservada.' : 'De valvas finas, con apertura conservada.';
   const mitralBidimensional = age && age > 80 ? 'Esclerocalcificación del anillo valvular, con apertura conservada.' : age && age > 60 ? 'De valvas finas, con ligera esclerosis del anillo valvular, apertura conservada y cierre a nivel del plano.' : 'De valvas finas, con apertura conservada y cierre valvular a nivel del plano.';
-  const mitral = !isDoppler ? mitralBidimensional : !mr || mr === '-' || mr === 'no' ? `${mitralBase} Competente.` : `${mitralBase} Insuficiencia ${mr}.`;
+  const mitral = !isDoppler ? mitralBidimensional : !mr || mr === '-' || mr === 'no' ? `${mitralBase} Competente.` : mr === 'trivial' ? `${mitralBase} Insuficiencia trivial, protosistólica.` : `${mitralBase} Insuficiencia ${mr}.`;
   const tr = String(data.get('tr') || '').toLowerCase(); const gtt = number(data, 'trGradient');
   let tricuspid = data.get('doppler') === 'No' ? 'De valvas finas, con apertura conservada.' : !tr || tr === '-' || tr === 'no' ? 'Morfología conservada, sin insuficiencia.' : `Insuficiencia ${tr}.`;
   if (data.get('doppler') !== 'No' && gtt && c.psap) tricuspid = `Insuficiencia ${tr || 'tricuspídea'}, con GTT de ${textNumber(gtt)} mmHg. Presión sistólica de la arteria pulmonar estimada en ${textNumber(c.psap)} mmHg.`;
   else if (data.get('doppler') !== 'No' && ['leve', 'trivial'].includes(tr)) tricuspid = `Insuficiencia ${tr}, no permitió estimar la presión sistólica de la arteria pulmonar de manera confiable.`;
   const vmax = number(data, 'avVmax'); const gm = number(data, 'aorticMeanGradient'); const ar = String(data.get('ar') || '').toLowerCase();
+  const aorticProsthesis = String(data.get('aorticProsthesis') || '').toLowerCase() === 'si';
   let aortic;
-  if (isDoppler && c.aorticStenosis) {
+  if (aorticProsthesis) {
+    aortic = `Prótesis valvular normoinserta, con velocidad y gradientes esperables para tipo de prótesis: Vel. máx: ${textNumber(vmax, 1) || '—'} m/seg, GM: ${textNumber(gm) || '—'} mmHg. Insuficiencia leve, habitual.`;
+  } else if (isDoppler && c.aorticStenosis) {
     const restriction = c.aorticStenosis === 'leve' ? 'apertura levemente restringida' : c.aorticStenosis === 'moderada' ? 'apertura restringida en grado moderado' : 'apertura severamente restringida';
     aortic = `Es tricúspide, con esclerocalcificación de sus valvas y ${restriction}. Vel max. ${textNumber(vmax, 1)} m/seg. GM ${textNumber(gm)} mmHg. GP ${textNumber(c.aorticPeakGradient)} mmHg.`;
-    if (c.ava) aortic += ` Se estimó área por ecuación de continuidad en ${textNumber(c.ava)} cm² (TSVI ${textNumber(number(data, 'lvotDiam'))} cm).`;
-    if (c.dimensionlessIndex) aortic += ` Cociente adimensional: ${textNumber(c.dimensionlessIndex)}.`;
+    if (c.ava) aortic += ` Se estimó área por ecuación de continuidad en ${fmtUpTo(c.ava, 2)} cm² (TSVI ${textNumber(number(data, 'lvotDiam'))} cm).`;
+    if (c.dimensionlessIndex) aortic += ` Cociente adimensional: ${fmtUpTo(c.dimensionlessIndex, 2)}.`;
   } else {
     aortic = !isDoppler && age && age > 80 ? 'Esclerosis de sus valvas, con apertura conservada.' : age && age > 60 ? 'Ligera esclerosis de sus valvas, con apertura conservada.' : 'Es trivalva, con apertura conservada.';
     if (isDoppler && vmax) aortic += ` Vel max. ${textNumber(vmax, 1)} m/seg.`;
   }
-  if (isDoppler) aortic += !ar || ar === '-' || ar === 'no' ? ' Sin insuficiencia.' : ` Insuficiencia ${ar}.`;
+  if (isDoppler && !aorticProsthesis) aortic += !ar || ar === '-' || ar === 'no' ? ' Sin insuficiencia.' : ` Insuficiencia ${ar}.`;
   const root = number(data, 'aorticRoot'); const rootText = !root ? 'Completar diámetro de raíz aórtica.' : root < 37 ? 'Normal.' : `Dilatada. ${textNumber(root)} mm.`;
   return [
-    ['VENTRÍCULO IZQUIERDO:', left], ['', motion], ['', relaxation], ['VENTRÍCULO DERECHO:', right],
+    ['VENTRÍCULO IZQUIERDO:', [left, motion, relaxation].filter(Boolean).join('\n')], ['VENTRÍCULO DERECHO:', right],
     ['AURÍCULA IZQUIERDA:', la], ['AURÍCULA DERECHA:', ra], ['VÁLVULA MITRAL:', mitral],
     ['VÁLVULA TRICÚSPIDE:', tricuspid], ['VÁLVULA AÓRTICA:', aortic], ['RAÍZ AÓRTICA:', rootText]
   ];
@@ -119,7 +126,12 @@ function autoConclusions(data, c) {
   const degrees = ['trivial', 'leve', 'moderada', 'severa'];
   const valveGrades = [data.get('mr'), data.get('tr'), data.get('ar')].map(x => String(x || '').trim().toLowerCase());
   const significantValve = valveGrades.some(x => x === 'moderada' || x === 'severa');
-  if (c.aorticStenosis) conclusions.push(`Estenosis aórtica ${c.aorticStenosis}, esclerodegenerativa.`);
+  const aorticProsthesis = String(data.get('aorticProsthesis') || '').toLowerCase() === 'si';
+  if (aorticProsthesis) conclusions.push('Prótesis valvular aórtica normoinserta, normofuncionante.');
+  else if (c.aorticStenosis) {
+    conclusions.push(`Estenosis aórtica ${c.aorticStenosis}, esclerodegenerativa.`);
+    if (valveGrades.filter(x => x === 'leve').length === 3) conclusions.push('Insuficiencias valvulares leves.');
+  }
   else if (significantValve) conclusions.push('Valvulopatía a valorar según los hallazgos consignados.');
   else if (valveGrades.some(x => degrees.includes(x))) conclusions.push(valveGrades.filter(x => x === 'leve').length === 3 ? 'Insuficiencias valvulares leves.' : 'Sin valvulopatías significativas.');
   const psap = c.psap;
@@ -150,8 +162,8 @@ function render() {
   dataCheck.hidden = !missingPatientData.length;
   const reportTitle = el('#reportTitle');
   if (reportTitle.dataset.dirty !== 'true') reportTitle.textContent = data.get('doppler') === 'Si' ? 'ECOCARDIOGRAMA DOPPLER 2D' : 'ECOCARDIOGRAMA BIDIMENSIONAL';
-  el('#avaResult').textContent = c.ava ? `${fmt(c.ava, 0)} cm²` : '—';
-  el('#dimensionlessResult').textContent = c.dimensionlessIndex ? fmt(c.dimensionlessIndex, 0) : '—';
+  el('#avaResult').textContent = c.ava ? `${fmtUpTo(c.ava, 2)} cm²` : '—';
+  el('#dimensionlessResult').textContent = c.dimensionlessIndex ? fmtUpTo(c.dimensionlessIndex, 2) : '—';
   el('#laVolumeIndexResult').textContent = c.laVolumeIndex == null ? '—' : `${fmt(c.laVolumeIndex, 0)} ml/m²`;
   el('#wedgePressureResult').textContent = c.wedgePressure == null ? '—' : `${fmt(c.wedgePressure, 0)} mmHg`;
   const name = data.get('patientName') || 'Apellido y nombre: —';
@@ -160,7 +172,7 @@ function render() {
   const val = (key, unit = '', decimals = 1) => reportValue(data, key, unit, decimals);
   const calculated = (num, unit = '', decimals = 1) => num == null ? '—' : `${fmt(num, decimals)}${unit ? ` ${unit}` : ''}`;
   const relaxation = c.eOverA == null ? '—' : c.eOverA >= 1 ? 'Normal' : 'Prolongada';
-  const pulmonaryHypertension = c.psap == null || c.psap <= 36 ? '—' : 'Sí';
+  const pulmonaryHypertension = c.psap == null ? '—' : c.psap < 36 ? 'No' : 'Sí';
   el('#metrics').innerHTML = [
     measureHeading('M E D I D A S&nbsp;&nbsp; 2 D', c.asc ? `ASC: ${fmt(c.asc, 0)} m²` : ''),
     '<div class="measure-subhead">CAVIDADES IZQUIERDAS:</div>',
@@ -176,7 +188,7 @@ function render() {
     `<div class="doppler-block ${data.get('doppler') === 'Si' ? '' : 'is-disabled'}">`,
     measureHeading('V A L O R A C I Ó N&nbsp;&nbsp; D O P P L E R'),
     measureRow('Velocidad E:', val('eWave','m/s',1), '', 'Velocidad A:', val('aWave','m/s',1), ''),
-    measureRow("Relación E/E' septal:", val('ePrime','',1), '[&lt;15]', 'Patrón de relajación:', editableMetric('relaxation', relaxation), ''),
+    measureRow("Relación E/E' septal:", val('ePrime','',0), '[&lt;15]', 'Patrón de relajación:', editableMetric('relaxation', relaxation), ''),
     measureRow('Insuficiencia mitral:', val('mr'), '', 'Insuficiencia tricuspídea:', val('tr'), ''),
     measureRow('Gradiente transtricuspídeo:', val('trGradient','mmHg',0), '', 'PAD estimada:', val('rap','mmHg',0), ''),
     measureRow('PSAP estimada:', calculated(c.psap,'mmHg',0), '[&lt;36 mmHg]', 'Hipertensión pulmonar:', editableMetric('pulmonaryHypertension', pulmonaryHypertension), ''),
@@ -216,7 +228,7 @@ function plainReportText() {
   const plainCalculated = (n, unit = '', decimals = 1) => n == null ? '-' : `${fmt(n, decimals)}${unit ? ` ${unit}` : ''}`;
   const manual = (field, automatic) => String(manualMetricEdits[field] ?? automatic ?? '-').trim() || '-';
   const relaxation = manual('relaxation', c.eOverA == null ? '-' : c.eOverA >= 1 ? 'Normal' : 'Prolongada');
-  const pulmonaryHypertension = manual('pulmonaryHypertension', c.psap == null || c.psap <= 36 ? '-' : 'Sí');
+  const pulmonaryHypertension = manual('pulmonaryHypertension', c.psap == null ? '-' : c.psap < 36 ? 'No' : 'Sí');
   const paired = (leftLabel, leftValue, rightLabel = '', rightValue = '') => `${leftLabel}\t${leftValue}\t\t${rightLabel}${rightLabel ? '\t' + rightValue : ''}`;
   const tripled = (leftLabel, leftValue, middleLabel, middleValue, rightLabel, rightValue) => `${leftLabel}\t${leftValue}\t\t${middleLabel}\t${middleValue}\t\t${rightLabel}\t${rightValue}`;
   const descriptionNames = {
@@ -253,7 +265,7 @@ function plainReportText() {
     tripled('Diámetro diastólico VD:', plainInput('rv', 'mm', 0), 'TAPSE:', plainInput('tapse', 'mm', 0), 'Vena cava inferior:', plainInput('ivc', 'mm', 0)),
     '', 'VALORACIÓN DOPPLER:',
     paired('Velocidad E:', plainInput('eWave', 'm/s', 1), 'Velocidad A:', plainInput('aWave', 'm/s', 1)),
-    paired("Relacion E/e' septal:", plainInput('ePrime', '', 1), 'Patrón de relajación:', relaxation),
+    paired("Relacion E/e' septal:", plainInput('ePrime', '', 0), 'Patrón de relajación:', relaxation),
     paired('Insuficiencia mitral:', plainInput('mr'), 'Insuficiencia tricuspídea:', plainInput('tr')),
     paired('GTT:', plainInput('trGradient', 'mmHg', 0), 'PAD estimada:', plainInput('rap', 'mmHg', 0)),
     paired('PSAP estimada:', plainCalculated(c.psap, 'mmHg', 0), 'Hipertensión pulmonar:', pulmonaryHypertension),
