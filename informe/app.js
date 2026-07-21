@@ -66,9 +66,14 @@ function autoDescriptions(data, c) {
   const rv = number(data, 'rv'); const tapse = number(data, 'tapse'); const ivc = number(data, 'ivc');
   let right = 'Completar medidas del ventrículo derecho.';
   if (rv && tapse) {
-    right = rv < 40 && tapse > 17 ? `Diámetros y función sistólica conservada. TAPSE: ${textNumber(tapse)} mm.` : `Diámetro basal ${textNumber(rv)} mm. TAPSE: ${textNumber(tapse)} mm.`;
+    const rvSize = rv < 41 ? 'de dimensiones conservadas' : rv <= 44 ? 'con leve dilatación' : rv <= 49 ? 'con dilatación moderada' : 'con dilatación severa';
+    const rvFunction = tapse > 17 ? 'función sistólica conservada' : tapse >= 13 ? 'disfunción sistólica leve' : tapse > 10 ? 'disfunción sistólica moderada' : 'disfunción sistólica severa';
+    right = rv < 41 && tapse > 17
+      ? `Diámetros y función sistólica conservada. TAPSE: ${textNumber(tapse)} mm.`
+      : `Ventrículo derecho ${rvSize} y ${rvFunction}. Diámetro basal: ${textNumber(rv)} mm. TAPSE: ${textNumber(tapse)} mm.`;
     if (ivc) right += ivc < 22 ? ' Vena cava inferior no dilatada, con variación respiratoria >50%.' : ' Vena cava inferior dilatada.';
     if (String(data.get('pacemaker')).toLowerCase() === 'si') right += ' Se observó catéter de dispositivo.';
+    if (String(data.get('pulmonaryArtery')).toLowerCase() === 'ok') right += ' Arteria pulmonar de diámetro conservado.';
   }
   const laArea = number(data, 'laArea'); const raArea = number(data, 'raArea');
   const la = !laArea ? 'Completar área de aurícula izquierda.' : laArea <= 20 ? `Normal. Área: ${textNumber(laArea)} cm².` : laArea < 30 ? `Leve dilatación. Área: ${textNumber(laArea)} cm².` : laArea < 40 ? `Dilatación moderada. Área: ${textNumber(laArea)} cm².` : `Dilatación severa. Área: ${textNumber(laArea)} cm².`;
@@ -202,6 +207,15 @@ function render() {
   renderConclusions(data, c);
 }
 form.addEventListener('input', render); form.addEventListener('change', render);
+form.addEventListener('keydown', event => {
+  if (event.key !== 'Enter' || event.target.matches('textarea, button')) return;
+  const fields = Array.from(form.querySelectorAll('input:not([type="hidden"]), select, textarea'))
+    .filter(field => !field.disabled && field.offsetParent !== null);
+  const currentIndex = fields.indexOf(event.target);
+  if (currentIndex < 0 || currentIndex === fields.length - 1) return;
+  event.preventDefault();
+  fields[currentIndex + 1].focus();
+});
 el('#reportTitle').addEventListener('input', () => { el('#reportTitle').dataset.dirty = 'true'; });
 el('#description').addEventListener('input', () => { el('#description').dataset.dirty = 'true'; });
 el('#regenerateButton').addEventListener('click', () => { renderDescriptions(new FormData(form), calculate(new FormData(form)), true); });

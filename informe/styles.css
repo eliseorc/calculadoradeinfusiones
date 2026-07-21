@@ -53,7 +53,7 @@
 
 
 /* Misma distancia entre líneas dentro de descripción y conclusiones */
-.description-row .description-label,.description-row .description-text,.conclusion-text{padding-top:0!important;padding-bottom:0!important;line-height:1.4!important}
+.description-row .description-label,.description-row .description-text,.conclusion-text{padding-top:0!important;padding-bottom:0!important;line-height:1.6!important}
 
 /* Acento visual de los encabezados del informe */
 .metrics>.measure-heading,.doppler-block>.measure-heading,.description-grid .measure-heading,.conclusion-heading{border-left:3px solid var(--accent)!important}

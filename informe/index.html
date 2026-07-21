@@ -32,7 +32,7 @@
 
           <section>
             <h3>Carga rápida de medidas</h3>
-            <p class="tab-help">Ingresá cada valor y presioná <kbd>Tab</kbd> para pasar al siguiente casillero.</p>
+            <p class="tab-help">Ingresá cada valor y presioná <kbd>Tab</kbd> o <kbd>Enter</kbd> para pasar al siguiente casillero.</p>
             <div class="quick-fields">
               <label>VI dias<input name="lvDd" inputmode="decimal" /></label><label>VI sist<input name="lvDs" inputmode="decimal" /></label>
               <label>SIV<input name="ivsd" inputmode="decimal" /></label><label>PP<input name="pwd" inputmode="decimal" /></label>
@@ -42,18 +42,18 @@
               <label>VD<input name="rv" inputmode="decimal" /></label><label>Tapse<input name="tapse" inputmode="decimal" /></label>
               <label>VCI<input name="ivc" inputmode="decimal" /></label><label>E<input name="eWave" inputmode="decimal" /></label>
               <label>A<input name="aWave" inputmode="decimal" /></label><label>E/e'<input name="ePrime" inputmode="decimal" /></label>
-              <label>IM<input name="mr" placeholder="-" /></label><label>IT<input name="tr" placeholder="-" /></label>
+              <label>IM<select name="mr"><option value="No" selected>No</option><option value="Trivial">Trivial</option><option value="Leve">Leve</option><option value="Moderada">Moderada</option><option value="Severa">Severa</option></select></label><label>IT<select name="tr"><option value="No">No</option><option value="Trivial" selected>Trivial</option><option value="Leve">Leve</option><option value="Moderada">Moderada</option><option value="Severa">Severa</option></select></label>
               <label>GTT<input name="trGradient" inputmode="decimal" /></label><label>PAD<input name="rap" inputmode="decimal" /></label>
-              <label>Vmax AO<input name="avVmax" inputmode="decimal" /></label><label>IAo<input name="ar" placeholder="-" /></label>
+              <label>Vmax AO<input name="avVmax" inputmode="decimal" /></label><label>IAo<select name="ar"><option value="No" selected>No</option><option value="Trivial">Trivial</option><option value="Leve">Leve</option><option value="Moderada">Moderada</option><option value="Severa">Severa</option></select></label>
               <label>GM<input name="aorticMeanGradient" inputmode="decimal" /></label><label>Arteria pulm:<select name="pulmonaryArtery"><option value="-" selected>-</option><option value="ok">OK</option></select></label>
               <label>Marcapasos:<select name="pacemaker"><option value="No" selected>No</option><option value="Si">Si</option></select></label><label>Prot. valv. ao.<select name="aorticProsthesis"><option value="No" selected>No</option><option value="Si">Si</option></select></label>
-              <label>Shunts:<input name="shunts" placeholder="-" /></label><div class="quick-placeholder" aria-hidden="true"></div>
+              <label>Shunts:<select name="shunts"><option value="-" selected>-</option><option value="No">No</option></select></label><div class="quick-placeholder" aria-hidden="true"></div>
               <label>Volumen AI:<input name="laVolume" inputmode="decimal" placeholder="ml" /></label><div class="quick-calculated"><span>Vol. AI indexado:</span><strong id="laVolumeIndexResult">—</strong></div>
               <div class="quick-calculated"><span>PW:</span><strong id="wedgePressureResult">—</strong></div><div class="quick-placeholder" aria-hidden="true"></div>
             </div>
           </section>
 
-          <div class="form-actions"><button class="secondary" id="clearButton" type="button">Limpiar formulario</button></div>
+          <div class="form-actions"><button class="secondary" id="clearButton" type="button">Nuevo informe</button></div>
 
           <section class="stenosis-section">
             <h3>Área valvular aórtica</h3>
