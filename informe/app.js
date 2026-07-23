@@ -70,7 +70,7 @@ function leftVentricleGeometry(sex, mass, rwt) {
         : 'severa';
   const pattern = rwt == null ? null : rwt > 0.42 ? 'concéntrica' : 'excéntrica';
   // Umbral operativo más estricto para emitir "remodelado concéntrico" automático.
-  const remodeling = !severity && rwt != null && rwt > 0.45;
+  const remodeling = !severity && rwt != null && rwt >= 0.48;
   return { severity, pattern, remodeling };
 }
 function autoDescriptions(data, c) {
@@ -209,6 +209,11 @@ function renderConclusions(data, c, force = false) {
   container.innerHTML = `<div class="conclusion-heading">C O N C L U S I O N E S</div>${autoConclusions(data, c).map(text => `<div class="conclusion-text editable" contenteditable="true">${escapeHtml(text)}</div>`).join('')}`;
   container.dataset.dirty = 'false';
 }
+function automaticReportTitle(data) {
+  return data.get('bidimensionalTitle') === 'on' || data.get('doppler') !== 'Si'
+    ? 'ECOCARDIOGRAMA BIDIMENSIONAL'
+    : 'ECOCARDIOGRAMA DOPPLER 2D';
+}
 function render() {
   const data = new FormData(form); const c = calculate(data);
   const missingPatientData = [
@@ -218,7 +223,7 @@ function render() {
   dataCheck.textContent = missingPatientData.length ? `Datos para revisar: ${missingPatientData.join(', ')}.` : '';
   dataCheck.hidden = !missingPatientData.length;
   const reportTitle = el('#reportTitle');
-  if (reportTitle.dataset.dirty !== 'true') reportTitle.textContent = data.get('doppler') === 'Si' ? 'ECOCARDIOGRAMA DOPPLER 2D' : 'ECOCARDIOGRAMA BIDIMENSIONAL';
+  if (reportTitle.dataset.dirty !== 'true') reportTitle.textContent = automaticReportTitle(data);
   el('#avaResult').textContent = c.ava ? `${fmtUpTo(c.ava, 2)} cm²` : '—';
   el('#dimensionlessResult').textContent = c.dimensionlessIndex ? fmtUpTo(c.dimensionlessIndex, 2) : '—';
   el('#laVolumeIndexResult').textContent = c.laVolumeIndex == null ? '—' : `${fmt(c.laVolumeIndex, 0)} ml/m²`;
@@ -262,6 +267,7 @@ function render() {
   renderConclusions(data, c);
 }
 form.addEventListener('input', render); form.addEventListener('change', render);
+form.elements.bidimensionalTitle.addEventListener('change', () => { el('#reportTitle').dataset.dirty = 'false'; });
 form.addEventListener('keydown', event => {
   if (event.key !== 'Enter' || event.target.matches('textarea, button')) return;
   const fields = Array.from(form.querySelectorAll('input:not([type="hidden"]), select, textarea'))
@@ -282,7 +288,7 @@ el('#clearButton').addEventListener('click', () => {
   form.elements.studyDate.value = studyDate;
   Object.keys(manualMetricEdits).forEach(key => delete manualMetricEdits[key]);
   el('#reportTitle').dataset.dirty = 'false';
-  el('#reportTitle').textContent = form.elements.doppler.value === 'Si' ? 'ECOCARDIOGRAMA DOPPLER 2D' : 'ECOCARDIOGRAMA BIDIMENSIONAL';
+  el('#reportTitle').textContent = automaticReportTitle(new FormData(form));
   el('#description').dataset.dirty = 'false';
   el('#conclusions').dataset.dirty = 'false';
   el('#description').textContent = '';

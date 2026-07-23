@@ -27,7 +27,7 @@
 .bottom-actions{max-width:1500px;margin:0 auto 28px;padding:0 28px;display:flex;justify-content:flex-end}
 .report-actions{width:210mm;margin:14px auto 0;display:flex;justify-content:center;gap:10px}.report-actions button:disabled{opacity:.65;cursor:wait}
 .description-row .description-label,.description-row .description-text{padding:3px 5px!important;line-height:1.2!important}.conclusion-text{padding:3px 6px!important;line-height:1.2!important}
-.quick-fields{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;border-bottom:1px solid var(--line)}.quick-fields label{margin:0;border-bottom:1px solid var(--line)}.report{padding:12mm 13mm;min-height:0}.report-header{padding-bottom:5px}.report-header h2{font-size:18px}.patient-line{padding:6px 0 5px;font-size:12px}.notice{padding:4px 6px;font-size:9px}.report-section{padding-top:7px}.report-measures{padding-top:7px}.measure-heading{height:19px;font-size:9px}.measure-subhead{font-size:9px;padding:3px 5px 1px}.measure-row{min-height:16px;font-size:8px}.measure-row>div{padding:1px 3px}.measure-ref{font-size:6.5px}.description-title{margin-bottom:2px}.description-title button{padding:3px 6px;font-size:9px}.description-grid .measure-heading{height:19px}.description-row .description-label,.description-row .description-text{min-height:21px;padding:2px 5px;font-size:10px;line-height:1.2}.conclusion{margin-top:5px}.conclusion-heading{height:19px;font-size:9px}.conclusion-text{min-height:20px;padding:2px 6px;font-size:10px;line-height:1.2}.signature{height:52px;margin-top:16px;font-size:9px}
+.quick-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));column-gap:10px;border-bottom:1px solid var(--line)}.quick-fields label{margin:0;border-bottom:1px solid var(--line)}.report{padding:12mm 13mm;min-height:0}.report-header{padding-bottom:5px}.report-header h2{font-size:18px}.patient-line{padding:6px 0 5px;font-size:12px}.notice{padding:4px 6px;font-size:9px}.report-section{padding-top:7px}.report-measures{padding-top:7px}.measure-heading{height:19px;font-size:9px}.measure-subhead{font-size:9px;padding:3px 5px 1px}.measure-row{min-height:16px;font-size:8px}.measure-row>div{padding:1px 3px}.measure-ref{font-size:6.5px}.description-title{margin-bottom:2px}.description-title button{padding:3px 6px;font-size:9px}.description-grid .measure-heading{height:19px}.description-row .description-label,.description-row .description-text{min-height:21px;padding:2px 5px;font-size:10px;line-height:1.2}.conclusion{margin-top:5px}.conclusion-heading{height:19px;font-size:9px}.conclusion-text{min-height:20px;padding:2px 6px;font-size:10px;line-height:1.2}.signature{height:52px;margin-top:16px;font-size:9px}
 .signature{width:155px!important;height:90px!important;margin:12px 34px 0 auto!important;border:0!important;padding:0!important;display:flex!important;align-items:flex-end!important;justify-content:flex-end!important}.signature img{display:block;max-width:100%;max-height:90px;width:auto;height:auto;object-fit:contain}
 .conclusion-text{padding-left:16px!important}
 
@@ -51,6 +51,17 @@
 .data-check{margin:10px 0 0;padding:7px 9px;border-left:3px solid #d7a627;background:#fff8dd;color:#705300;font-size:12px;line-height:1.25}
 .data-check[hidden]{display:none}
 
+.study-type-field{display:grid;gap:5px;font-size:12px;font-weight:650;color:#486170}
+.study-type-controls{display:flex;align-items:center;gap:8px}
+.study-type-controls select{flex:1;min-width:0}
+.title-mode-toggle{display:flex;align-items:center;gap:4px;white-space:nowrap;font-size:11px;font-weight:650;color:#486170;cursor:pointer}
+.title-mode-toggle input{width:15px;height:15px;margin:0;padding:0;flex:0 0 auto;accent-color:var(--accent)}
+.patient-fields{grid-template-columns:repeat(12,minmax(0,1fr))}
+.patient-fields>:nth-child(1),.patient-fields>:nth-child(2){grid-column:span 6}
+.patient-fields>:nth-child(3){grid-column:span 6}
+.patient-fields>:nth-child(4),.patient-fields>:nth-child(5){grid-column:span 3}
+.patient-fields>:nth-child(6),.patient-fields>:nth-child(7),.patient-fields>:nth-child(8){grid-column:span 4}
+@media(max-width:620px){.patient-fields{grid-template-columns:1fr 1fr}.patient-fields>*{grid-column:auto!important}.patient-fields>:nth-child(3){grid-column:1/-1!important}.quick-fields{grid-template-columns:1fr 1fr}}
 
 /* Misma distancia entre líneas dentro de descripción y conclusiones */
 .description-row .description-label,.description-row .description-text,.conclusion-text{padding-top:0!important;padding-bottom:0!important;line-height:1.6!important}

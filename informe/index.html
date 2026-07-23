@@ -17,8 +17,14 @@
         <form id="ecoForm" autocomplete="off">
           <section>
             <h3>Paciente</h3>
-            <div class="fields two">
-              <label>Tipo de estudio<select name="doppler" autofocus><option value="No">Bidimensional</option><option value="Si" selected>Doppler 2D</option></select></label>
+            <div class="fields patient-fields">
+              <div class="study-type-field">
+                <label for="studyType">Tipo de estudio</label>
+                <div class="study-type-controls">
+                  <select id="studyType" name="doppler" autofocus><option value="No">Bidimensional</option><option value="Si" selected>Doppler 2D</option></select>
+                  <label class="title-mode-toggle" for="bidimensionalTitle"><input id="bidimensionalTitle" name="bidimensionalTitle" type="checkbox" />T. 2D</label>
+                </div>
+              </div>
               <label>Fecha del estudio<input name="studyDate" type="date" /></label>
               <label>Apellido y nombre<input name="patientName" placeholder="Apellido, Nombre" /></label>
               <label>Sexo<select name="sex"><option value="">Seleccionar</option><option value="M">Masculino</option><option value="F">Femenino</option></select></label>
@@ -72,7 +78,7 @@
         <article class="report" id="report">
           <img class="institutional-banner" src="assets/institutional-banner.png" alt="Sanatorio Argentino — Servicio de Ecografía" />
           <div class="report-header">
-            <div><p class="eyebrow">INFORME</p><h2 id="reportTitle" class="editable" contenteditable="true">ECOCARDIOGRAMA BIDIMENSIONAL</h2></div>
+            <div><p class="eyebrow">INFORME</p><h2 id="reportTitle" class="editable" contenteditable="true">ECOCARDIOGRAMA DOPPLER 2D</h2></div>
           </div>
           <div class="patient-line"><strong id="reportPatient">Apellido y nombre: —</strong><p id="reportDate"></p></div>
           <div class="notice">Borrador automático: revisar, completar y validar clínicamente antes de emitir.</div>
