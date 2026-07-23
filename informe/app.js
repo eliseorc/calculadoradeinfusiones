@@ -398,6 +398,12 @@ async function generateSelectablePdf() {
     });
     return lines.length ? lines : [''];
   };
+  const pdfBandTitle = (title) => {
+    const compactTitle = String(title || '').replace(/\s+/g, '').toUpperCase();
+    if (compactTitle === 'MEDIDAS2D') return 'M E D I D A S     2 D';
+    if (compactTitle === 'VALORACIÓNDOPPLER') return 'V A L O R A C I Ó N     D O P P L E R';
+    return String(title || '').replace(/\s+/g, ' ').trim();
+  };
   const addBand = (title, rightText = '') => {
     pageBreakIfNeeded(7);
     pdf.setFillColor(...paleAccent);
@@ -406,7 +412,7 @@ async function generateSelectablePdf() {
     pdf.setLineWidth(0.8);
     pdf.line(marginX, y, marginX, y + 5.5);
     useFont('bold', 9, dark);
-    pdf.text(String(title || '').replace(/\s+/g, ' ').trim(), pageWidth / 2, y + 3.9, { align: 'center' });
+    pdf.text(pdfBandTitle(title), pageWidth / 2, y + 3.9, { align: 'center' });
     if (rightText) {
       useFont('normal', 6.5, muted);
       pdf.text(String(rightText).replace(/\s+/g, ' ').trim(), pageWidth - marginX - 2, y + 3.8, { align: 'right' });
