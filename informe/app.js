@@ -9,6 +9,14 @@ const number = (data, key) => {
 const fmt = (value, decimals = 0) => value == null || !Number.isFinite(value) ? '—' : value.toLocaleString('es-AR', { maximumFractionDigits: decimals, minimumFractionDigits: decimals });
 const fmtUpTo = (value, decimals = 2) => value == null || !Number.isFinite(value) ? '—' : value.toLocaleString('es-AR', { maximumFractionDigits: decimals, minimumFractionDigits: 0 });
 const value = (data, key) => data.get(key) || '—';
+const patientFileName = (data) => {
+  const cleanName = String(data.get('patientName') || '')
+    .normalize('NFC')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleanName || 'Informe';
+};
 
 function calculate(data) {
   const weight = number(data, 'weight'), height = number(data, 'height');
@@ -68,6 +76,7 @@ function leftVentricleGeometry(sex, mass, rwt) {
 function autoDescriptions(data, c) {
   const sex = data.get('sex');
   const age = number(data, 'age');
+  const isDoppler = data.get('doppler') === 'Si';
   const dd = number(data, 'lvDd'); const ef = number(data, 'lvef'); const mass = c.mass;
   const geometry = leftVentricleGeometry(sex, mass, c.rwt);
   let left = 'Completar medidas del ventrículo izquierdo.';
@@ -86,7 +95,7 @@ function autoDescriptions(data, c) {
     }
   }
   const motion = data.get('goodWindow').toLowerCase() === 'si' ? 'No se evidenciaron alteraciones de motilidad parietal en reposo.' : 'En reposo no impresiona presentar alteraciones de motilidad parietal (ventana acústica subóptima).';
-  const relaxation = c.eOverA == null ? '' : c.eOverA >= 1 ? 'Patrón diastólico de relajación normal.' : 'Patrón diastólico de relajación prolongada.';
+  const relaxation = !isDoppler || c.eOverA == null ? '' : c.eOverA >= 1 ? 'Patrón diastólico de relajación normal.' : 'Patrón diastólico de relajación prolongada.';
   const rv = number(data, 'rv'); const tapse = number(data, 'tapse'); const ivc = number(data, 'ivc');
   let right = 'Completar medidas del ventrículo derecho.';
   if (rv && tapse) {
@@ -109,7 +118,6 @@ function autoDescriptions(data, c) {
             : `Dilatación severa. Área: ${textNumber(laArea)} cm².`;
   const ra = !raArea ? 'Completar área de aurícula derecha.' : raArea <= 18 ? `Normal. Área: ${textNumber(raArea)} cm².` : `Dilatada. Área: ${textNumber(raArea)} cm².`;
   const mr = String(data.get('mr') || '').toLowerCase();
-  const isDoppler = data.get('doppler') === 'Si';
   const mitralBase = age && age > 80 ? 'Esclerocalcificación del anillo valvular, con apertura conservada.' : age && age > 60 ? 'De valvas finas, con ligera esclerosis del anillo valvular, apertura conservada.' : 'De valvas finas, con apertura conservada.';
   const mitralBidimensional = age && age > 80 ? 'Esclerocalcificación del anillo valvular, con apertura conservada.' : age && age > 60 ? 'De valvas finas, con ligera esclerosis del anillo valvular, apertura conservada y cierre a nivel del plano.' : 'De valvas finas, con apertura conservada y cierre valvular a nivel del plano.';
   const mitral = !isDoppler ? mitralBidimensional : !mr || mr === '-' || mr === 'no' ? `${mitralBase} Competente.` : mr === 'trivial' ? `${mitralBase} Insuficiencia trivial, protosistólica.` : `${mitralBase} Insuficiencia ${mr}.`;
@@ -120,8 +128,10 @@ function autoDescriptions(data, c) {
   const vmax = number(data, 'avVmax'); const gm = number(data, 'aorticMeanGradient'); const ar = String(data.get('ar') || '').toLowerCase();
   const aorticProsthesis = String(data.get('aorticProsthesis') || '').toLowerCase() === 'si';
   let aortic;
-  if (aorticProsthesis) {
+  if (aorticProsthesis && isDoppler) {
     aortic = `Prótesis valvular normoinserta, con velocidad y gradientes esperables para tipo de prótesis: Vel. máx: ${textNumber(vmax, 1) || '—'} m/seg, GM: ${textNumber(gm) || '—'} mmHg. Insuficiencia leve, habitual.`;
+  } else if (aorticProsthesis) {
+    aortic = 'Prótesis valvular aórtica normoinserta.';
   } else if (isDoppler && c.aorticStenosis) {
     const restriction = c.aorticStenosis === 'leve' ? 'apertura levemente restringida' : c.aorticStenosis === 'moderada' ? 'apertura restringida en grado moderado' : 'apertura severamente restringida';
     aortic = `Es tricúspide, con esclerocalcificación de sus valvas y ${restriction}. Vel max. ${textNumber(vmax, 1)} m/seg. GM ${textNumber(gm)} mmHg. GP ${textNumber(c.aorticPeakGradient)} mmHg.`;
@@ -147,6 +157,7 @@ function renderDescriptions(data, c, force = false) {
 }
 function autoConclusions(data, c) {
   const sex = data.get('sex'); const dd = number(data, 'lvDd'); const ef = number(data, 'lvef'); const mass = c.mass;
+  const isDoppler = data.get('doppler') === 'Si';
   const geometry = leftVentricleGeometry(sex, mass, c.rwt);
   const conclusions = [];
   if (dd && ef && mass && geometry && dd <= 56 && ef >= 55) {
@@ -158,27 +169,35 @@ function autoConclusions(data, c) {
       conclusions.push(`Ventrículo izquierdo con ${hypertrophy} y función sistólica conservada.`);
     } else conclusions.push('Ventrículo izquierdo de dimensiones y función sistólica conservada.');
   } else if (dd || ef || mass) conclusions.push('Ventrículo izquierdo: completar valoración según medidas y función sistólica.');
-  if (c.eOverA != null) {
-    if (c.eOverA < 1) conclusions.push('Disfunción diastólica tipo 1.');
+  if (!isDoppler) {
+    const laArea = number(data, 'laArea');
+    const normalLaVolumeDespiteArea = laArea > 20 && c.laVolumeIndex != null && c.laVolumeIndex <= 34;
+    if (laArea > 20 && !normalLaVolumeDespiteArea) {
+      if (laArea < 30) conclusions.push('Aurícula izquierda levemente dilatada.');
+      else if (laArea < 40) conclusions.push('Aurícula izquierda moderadamente dilatada.');
+      else conclusions.push('Aurícula izquierda severamente dilatada.');
+    }
+  } else {
+    if (c.eOverA != null && c.eOverA < 1) conclusions.push('Disfunción diastólica tipo 1.');
+    const degrees = ['trivial', 'leve', 'moderada', 'severa'];
+    const valveGrades = [data.get('mr'), data.get('tr'), data.get('ar')].map(x => String(x || '').trim().toLowerCase());
+    const significantValve = valveGrades.some(x => x === 'moderada' || x === 'severa');
+    const aorticProsthesis = String(data.get('aorticProsthesis') || '').toLowerCase() === 'si';
+    if (aorticProsthesis) conclusions.push('Prótesis valvular aórtica normoinserta, normofuncionante.');
+    else if (c.aorticStenosis) {
+      conclusions.push(`Estenosis aórtica ${c.aorticStenosis}, esclerodegenerativa.`);
+      if (valveGrades.filter(x => x === 'leve').length === 3) conclusions.push('Insuficiencias valvulares leves.');
+    }
+    else if (significantValve) conclusions.push('Valvulopatía a valorar según los hallazgos consignados.');
+    else if (valveGrades.some(x => degrees.includes(x))) conclusions.push(valveGrades.filter(x => x === 'leve').length === 3 ? 'Insuficiencias valvulares leves.' : 'Sin valvulopatías significativas.');
+    const psap = c.psap;
+    if (psap != null) {
+      if (psap < 36) conclusions.push('No se constató hipertensión pulmonar.');
+      else if (psap < 50) conclusions.push('Hipertensión pulmonar leve.');
+      else if (psap < 60) conclusions.push('Hipertensión pulmonar moderada.');
+      else conclusions.push('Hipertensión pulmonar severa.');
+    } else if (number(data, 'trGradient') == null && ['leve', 'trivial'].includes(String(data.get('tr') || '').toLowerCase())) conclusions.push('No se constató hipertensión pulmonar.');
   }
-  const degrees = ['trivial', 'leve', 'moderada', 'severa'];
-  const valveGrades = [data.get('mr'), data.get('tr'), data.get('ar')].map(x => String(x || '').trim().toLowerCase());
-  const significantValve = valveGrades.some(x => x === 'moderada' || x === 'severa');
-  const aorticProsthesis = String(data.get('aorticProsthesis') || '').toLowerCase() === 'si';
-  if (aorticProsthesis) conclusions.push('Prótesis valvular aórtica normoinserta, normofuncionante.');
-  else if (c.aorticStenosis) {
-    conclusions.push(`Estenosis aórtica ${c.aorticStenosis}, esclerodegenerativa.`);
-    if (valveGrades.filter(x => x === 'leve').length === 3) conclusions.push('Insuficiencias valvulares leves.');
-  }
-  else if (significantValve) conclusions.push('Valvulopatía a valorar según los hallazgos consignados.');
-  else if (valveGrades.some(x => degrees.includes(x))) conclusions.push(valveGrades.filter(x => x === 'leve').length === 3 ? 'Insuficiencias valvulares leves.' : 'Sin valvulopatías significativas.');
-  const psap = c.psap;
-  if (psap != null) {
-    if (psap < 36) conclusions.push('No se constató hipertensión pulmonar.');
-    else if (psap < 50) conclusions.push('Hipertensión pulmonar leve.');
-    else if (psap < 60) conclusions.push('Hipertensión pulmonar moderada.');
-    else conclusions.push('Hipertensión pulmonar severa.');
-  } else if (number(data, 'trGradient') == null && ['leve', 'trivial'].includes(String(data.get('tr') || '').toLowerCase())) conclusions.push('No se constató hipertensión pulmonar.');
   const shunts = String(data.get('shunts') || '').toLowerCase();
   if (shunts === 'no') conclusions.push('Sin evidencias de coartación aórtica o shunts intracardíacos.');
   conclusions.push('Pericardio libre de derrame.');
@@ -209,8 +228,11 @@ function render() {
   el('#reportDate').textContent = data.get('studyDate') ? new Date(`${data.get('studyDate')}T12:00:00`).toLocaleDateString('es-AR') : '';
   const val = (key, unit = '', decimals = 1) => reportValue(data, key, unit, decimals);
   const calculated = (num, unit = '', decimals = 1) => num == null ? '—' : `${fmt(num, decimals)}${unit ? ` ${unit}` : ''}`;
-  const relaxation = c.eOverA == null ? '—' : c.eOverA >= 1 ? 'Normal' : 'Prolongada';
-  const pulmonaryHypertension = data.get('doppler') !== 'Si' ? '—' : c.psap == null || c.psap < 36 ? 'No' : 'Sí';
+  const isDoppler = data.get('doppler') === 'Si';
+  const dopplerValue = (key, unit = '', decimals = 1) => isDoppler ? val(key, unit, decimals) : '';
+  const dopplerCalculated = (num, unit = '', decimals = 1) => isDoppler ? calculated(num, unit, decimals) : '';
+  const relaxation = !isDoppler || c.eOverA == null ? '' : c.eOverA >= 1 ? 'Normal' : 'Prolongada';
+  const pulmonaryHypertension = !isDoppler ? '' : c.psap == null || c.psap < 36 ? 'No' : 'Sí';
   el('#metrics').innerHTML = [
     measureHeading('M E D I D A S&nbsp;&nbsp; 2 D', c.asc ? `ASC: ${fmt(c.asc, 0)} m²` : ''),
     '<div class="measure-subhead">CAVIDADES IZQUIERDAS:</div>',
@@ -223,15 +245,15 @@ function render() {
     '<div class="measure-subhead">VENTRÍCULO DERECHO:</div>',
     measureRow('Diámetro diastólico basal:', val('rv','mm',0), '[&lt;40 mm]', 'TAPSE:', val('tapse','mm',0), '[&gt;17 mm]'),
     measureRow('Vena cava inferior:', val('ivc','mm',0), '[&lt;22 mm]', '', '', ''),
-    `<div class="doppler-block ${data.get('doppler') === 'Si' ? '' : 'is-disabled'}">`,
+    `<div class="doppler-block ${isDoppler ? '' : 'is-disabled'}">`,
     measureHeading('V A L O R A C I Ó N&nbsp;&nbsp; D O P P L E R'),
-    measureRow('Velocidad E:', val('eWave','m/s',1), '', 'Velocidad A:', val('aWave','m/s',1), ''),
-    measureRow("Relación E/E' septal:", val('ePrime','',0), '[&lt;15]', 'Patrón de relajación:', editableMetric('relaxation', relaxation), ''),
-    measureRow('Insuficiencia mitral:', val('mr'), '', 'Insuficiencia tricuspídea:', val('tr'), ''),
-    measureRow('Gradiente transtricuspídeo:', val('trGradient','mmHg',0), '', 'PAD estimada:', val('rap','mmHg',0), ''),
-    measureRow('PSAP estimada:', calculated(c.psap,'mmHg',0), '[&lt;36 mmHg]', 'Hipertensión pulmonar:', editableMetric('pulmonaryHypertension', pulmonaryHypertension), ''),
-    measureRow('Velocidad flujo aórtico:', val('avVmax','m/s',1), '[&lt;2 m/seg]', 'Gradiente pico aórtico:', calculated(c.aorticPeakGradient,'mmHg',0), '[&lt;13 mmHg]'),
-    measureRow('Gradiente medio aórtico:', val('aorticMeanGradient','mmHg',0), '', 'Insuficiencia aórtica:', val('ar'), ''),
+    measureRow('Velocidad E:', dopplerValue('eWave','m/s',1), '', 'Velocidad A:', dopplerValue('aWave','m/s',1), ''),
+    measureRow("Relación E/E' septal:", dopplerValue('ePrime','',0), '[&lt;15]', 'Patrón de relajación:', isDoppler ? editableMetric('relaxation', relaxation) : '', ''),
+    measureRow('Insuficiencia mitral:', dopplerValue('mr'), '', 'Insuficiencia tricuspídea:', dopplerValue('tr'), ''),
+    measureRow('Gradiente transtricuspídeo:', dopplerValue('trGradient','mmHg',0), '', 'PAD estimada:', dopplerValue('rap','mmHg',0), ''),
+    measureRow('PSAP estimada:', dopplerCalculated(c.psap,'mmHg',0), '[&lt;36 mmHg]', 'Hipertensión pulmonar:', isDoppler ? editableMetric('pulmonaryHypertension', pulmonaryHypertension) : '', ''),
+    measureRow('Velocidad flujo aórtico:', dopplerValue('avVmax','m/s',1), '[&lt;2 m/seg]', 'Gradiente pico aórtico:', dopplerCalculated(c.aorticPeakGradient,'mmHg',0), '[&lt;13 mmHg]'),
+    measureRow('Gradiente medio aórtico:', dopplerValue('aorticMeanGradient','mmHg',0), '', 'Insuficiencia aórtica:', dopplerValue('ar'), ''),
     '</div>'
   ].join('');
   el('#metrics').querySelectorAll('.inline-edit').forEach(node => node.addEventListener('input', () => { manualMetricEdits[node.dataset.field] = node.textContent.trim(); }));
@@ -259,55 +281,234 @@ el('#clearButton').addEventListener('click', () => {
   form.reset();
   form.elements.studyDate.value = studyDate;
   Object.keys(manualMetricEdits).forEach(key => delete manualMetricEdits[key]);
-  el('#description').textContent = ''; el('#conclusions').textContent = ''; render();
+  el('#reportTitle').dataset.dirty = 'false';
+  el('#reportTitle').textContent = form.elements.doppler.value === 'Si' ? 'ECOCARDIOGRAMA DOPPLER 2D' : 'ECOCARDIOGRAMA BIDIMENSIONAL';
+  el('#description').dataset.dirty = 'false';
+  el('#conclusions').dataset.dirty = 'false';
+  el('#description').textContent = '';
+  el('#conclusions').textContent = '';
+  render();
 });
 el('#printButton').addEventListener('click', () => window.print());
+
+function bufferToBase64(buffer) {
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(offset, offset + chunkSize));
+  }
+  return window.btoa(binary);
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener('load', () => resolve(reader.result), { once: true });
+    reader.addEventListener('error', () => reject(reader.error || new Error('No se pudo leer la imagen')), { once: true });
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function imageElementDataUrl(image) {
+  try {
+    const response = await fetch(image.currentSrc || image.src);
+    if (!response.ok) throw new Error('No se pudo cargar la imagen');
+    return await blobToDataUrl(await response.blob());
+  } catch (error) {
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    canvas.getContext('2d').drawImage(image, 0, 0);
+    return canvas.toDataURL('image/png');
+  }
+}
+
+async function configurePdfFonts(pdf) {
+  try {
+    const [regularResponse, boldResponse] = await Promise.all([
+      fetch('assets/fonts/Carlito-Regular.ttf'),
+      fetch('assets/fonts/Carlito-Bold.ttf')
+    ]);
+    if (!regularResponse.ok || !boldResponse.ok) throw new Error('No se pudieron cargar las fuentes');
+    pdf.addFileToVFS('Carlito-Regular.ttf', bufferToBase64(await regularResponse.arrayBuffer()));
+    pdf.addFileToVFS('Carlito-Bold.ttf', bufferToBase64(await boldResponse.arrayBuffer()));
+    pdf.addFont('Carlito-Regular.ttf', 'Carlito', 'normal');
+    pdf.addFont('Carlito-Bold.ttf', 'Carlito', 'bold');
+    return 'Carlito';
+  } catch (error) {
+    console.warn('Se usará una fuente PDF compatible.', error);
+    return 'helvetica';
+  }
+}
+
+async function generateSelectablePdf() {
+  if (!window.jspdf?.jsPDF) throw new Error('No se cargó el generador de PDF');
+  const pdf = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+  const fontFamily = await configurePdfFonts(pdf);
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const marginX = 12;
+  const topMargin = 9;
+  const bottomMargin = 10;
+  const contentWidth = pageWidth - (marginX * 2);
+  const dark = [24, 48, 66];
+  const muted = [103, 113, 120];
+  const faded = [192, 201, 205];
+  const accent = [22, 133, 143];
+  const paleAccent = [231, 242, 243];
+  let y = topMargin;
+
+  const useFont = (style = 'normal', size = 9, color = dark) => {
+    pdf.setFont(fontFamily, style);
+    pdf.setFontSize(size);
+    pdf.setTextColor(...color);
+  };
+  const newPage = () => {
+    pdf.addPage();
+    y = topMargin;
+  };
+  const pageBreakIfNeeded = (height) => {
+    if (y + height <= pageHeight - bottomMargin) return false;
+    newPage();
+    return true;
+  };
+  const wrapText = (text, width, size = 9, style = 'normal') => {
+    useFont(style, size);
+    const sourceLines = String(text || '').split('\n');
+    const lines = [];
+    sourceLines.forEach(line => {
+      const wrapped = pdf.splitTextToSize(line || ' ', width);
+      lines.push(...wrapped);
+    });
+    return lines.length ? lines : [''];
+  };
+  const addBand = (title, rightText = '') => {
+    pageBreakIfNeeded(7);
+    pdf.setFillColor(...paleAccent);
+    pdf.rect(marginX, y, contentWidth, 5.5, 'F');
+    pdf.setDrawColor(...accent);
+    pdf.setLineWidth(0.8);
+    pdf.line(marginX, y, marginX, y + 5.5);
+    useFont('bold', 9, dark);
+    pdf.text(String(title || '').replace(/\s+/g, ' ').trim(), pageWidth / 2, y + 3.9, { align: 'center' });
+    if (rightText) {
+      useFont('normal', 6.5, muted);
+      pdf.text(String(rightText).replace(/\s+/g, ' ').trim(), pageWidth - marginX - 2, y + 3.8, { align: 'right' });
+    }
+    y += 7;
+  };
+
+  const banner = document.querySelector('.institutional-banner');
+  if (banner) {
+    const bannerData = await imageElementDataUrl(banner);
+    const bannerHeight = Math.min(20, contentWidth * (banner.naturalHeight / banner.naturalWidth));
+    pdf.addImage(bannerData, 'PNG', marginX, y, contentWidth, bannerHeight, undefined, 'FAST');
+    y += bannerHeight + 4;
+  }
+
+  useFont('bold', 8, accent);
+  pdf.text('INFORME', marginX, y);
+  y += 5;
+  useFont('bold', 16.5, dark);
+  pdf.text(el('#reportTitle').textContent.trim(), marginX, y);
+  y += 2.5;
+  pdf.setDrawColor(...accent);
+  pdf.setLineWidth(0.5);
+  pdf.line(marginX, y, pageWidth - marginX, y);
+  y += 5;
+  useFont('bold', 11.2, dark);
+  pdf.text(el('#reportPatient').textContent.trim(), marginX, y);
+  y += 4.8;
+  useFont('normal', 11.2, dark);
+  pdf.text(el('#reportDate').textContent.trim(), marginX, y);
+  y += 6;
+
+  const metricNodes = Array.from(el('#metrics').querySelectorAll('.measure-heading, .measure-subhead, .measure-row'));
+  metricNodes.forEach(node => {
+    const disabledDoppler = Boolean(node.closest('.doppler-block.is-disabled'));
+    if (node.classList.contains('measure-heading')) {
+      addBand(node.querySelector('strong')?.textContent || node.textContent, node.querySelector('em')?.textContent || '');
+      return;
+    }
+    if (node.classList.contains('measure-subhead')) {
+      pageBreakIfNeeded(5);
+      useFont('bold', 8.5, disabledDoppler ? faded : dark);
+      pdf.text(node.textContent.trim(), marginX, y + 2.8);
+      y += 5;
+      return;
+    }
+    pageBreakIfNeeded(4.5);
+    const cells = Array.from(node.children).map(cell => cell.textContent.trim());
+    const rowColor = disabledDoppler ? faded : dark;
+    const refColor = disabledDoppler ? faded : muted;
+    useFont('normal', 8.7, rowColor);
+    pdf.text(cells[0] || '', 62, y + 2.8, { align: 'right' });
+    useFont('bold', 8.7, rowColor);
+    pdf.text(cells[1] || '', 65, y + 2.8);
+    useFont('normal', 6.2, refColor);
+    pdf.text(cells[2] || '', 82, y + 2.7);
+    useFont('normal', 8.7, rowColor);
+    pdf.text(cells[3] || '', 151, y + 2.8, { align: 'right' });
+    useFont('bold', 8.7, rowColor);
+    pdf.text(cells[4] || '', 154, y + 2.8);
+    useFont('normal', 6.2, refColor);
+    pdf.text(cells[5] || '', 174, y + 2.7);
+    y += 4.3;
+  });
+
+  y += 2;
+  addBand('D E S C R I P C I Ó N');
+  const descriptionRows = Array.from(el('#description').querySelectorAll('.description-row'));
+  descriptionRows.forEach(row => {
+    const label = row.querySelector('.description-label')?.textContent.trim() || '';
+    const text = row.querySelector('.description-text')?.textContent.trim() || '';
+    const labelLines = wrapText(label, 43, 9, 'bold');
+    const textLines = wrapText(text, 133, 9, 'normal');
+    const rowHeight = Math.max(labelLines.length, textLines.length) * 4.15 + 0.7;
+    if (pageBreakIfNeeded(rowHeight)) addBand('D E S C R I P C I Ó N');
+    useFont('bold', 9, dark);
+    pdf.text(labelLines, 57, y + 3.1, { align: 'right', lineHeightFactor: 1.3 });
+    useFont('normal', 9, dark);
+    pdf.text(textLines, 61, y + 3.1, { lineHeightFactor: 1.3 });
+    y += rowHeight;
+  });
+
+  y += 2;
+  addBand('C O N C L U S I O N E S');
+  const conclusionRows = Array.from(el('#conclusions').querySelectorAll('.conclusion-text'));
+  conclusionRows.forEach(row => {
+    const lines = wrapText(row.textContent.trim(), contentWidth - 8, 9, 'normal');
+    const rowHeight = lines.length * 4.3 + 0.5;
+    if (pageBreakIfNeeded(rowHeight)) addBand('C O N C L U S I O N E S');
+    useFont('normal', 9, dark);
+    pdf.text(lines, marginX + 4, y + 3.1, { lineHeightFactor: 1.35 });
+    y += rowHeight;
+  });
+
+  const signature = document.querySelector('.signature img');
+  if (signature) {
+    pageBreakIfNeeded(29);
+    const signatureData = await imageElementDataUrl(signature);
+    const signatureHeight = 25;
+    const signatureWidth = signatureHeight * (signature.naturalWidth / signature.naturalHeight);
+    pdf.addImage(signatureData, 'PNG', 153, y + 2, signatureWidth, signatureHeight, undefined, 'FAST');
+  }
+  return pdf;
+}
 
 el('#pdfButton').addEventListener('click', async () => {
   const button = el('#pdfButton');
   const originalLabel = button.textContent;
-  let hiddenNotice;
-  let hiddenNoPrint = [];
   try {
     button.disabled = true;
     button.textContent = 'Generando PDF…';
-    if (!window.html2canvas || !window.jspdf?.jsPDF) throw new Error('No se cargó el generador de PDF');
-    const report = el('#report');
-    await Promise.all(Array.from(report.querySelectorAll('img')).map(image => image.complete ? Promise.resolve() : new Promise(resolve => {
-      image.addEventListener('load', resolve, { once: true });
-      image.addEventListener('error', resolve, { once: true });
-    })));
-    if (document.fonts?.ready) await document.fonts.ready;
-    hiddenNotice = report.querySelector('.notice');
-    if (hiddenNotice) hiddenNotice.style.display = 'none';
-    hiddenNoPrint = Array.from(report.querySelectorAll('.no-print')).map(node => ({ node, display: node.style.display }));
-    hiddenNoPrint.forEach(({ node }) => { node.style.display = 'none'; });
-
-    const canvas = await window.html2canvas(report, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false, imageTimeout: 15000 });
-    const pdf = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
-    const margin = 8;
-    const pageWidth = 210;
-    const pageHeight = 297;
-    const contentWidth = pageWidth - (margin * 2);
-    const contentHeight = pageHeight - (margin * 2);
-    const imageHeight = (canvas.height * contentWidth) / canvas.width;
-    const imageData = canvas.toDataURL('image/jpeg', 0.96);
-    let offset = 0;
-    let page = 0;
-    while (offset < imageHeight - 0.1) {
-      if (page > 0) pdf.addPage();
-      pdf.addImage(imageData, 'JPEG', margin, margin - offset, contentWidth, imageHeight, undefined, 'FAST');
-      offset += contentHeight;
-      page += 1;
-    }
-    const patient = String(new FormData(form).get('patientName') || 'informe').replace(/[^a-z0-9áéíóúñ]+/gi, '_');
-    pdf.save(`Ecocardiograma_${patient}.pdf`);
+    const pdf = await generateSelectablePdf();
+    pdf.save(`${patientFileName(new FormData(form))}.pdf`);
   } catch (error) {
     console.error(error);
     window.alert('No se pudo generar el PDF. Probá recargar la página e intentarlo nuevamente.');
   } finally {
-    if (hiddenNotice) hiddenNotice.style.display = '';
-    hiddenNoPrint.forEach(({ node, display }) => { node.style.display = display; });
     button.disabled = false;
     button.textContent = originalLabel;
   }
@@ -316,6 +517,7 @@ el('#pdfButton').addEventListener('click', async () => {
 function plainReportText() {
   const data = new FormData(form);
   const c = calculate(data);
+  const isDoppler = data.get('doppler') === 'Si';
   const plainInput = (key, unit = '', decimals = 1) => {
     const n = number(data, key);
     if (n != null) return `${fmt(n, decimals)}${unit ? ` ${unit}` : ''}`;
@@ -323,9 +525,11 @@ function plainReportText() {
     return raw && raw !== '—' ? raw : '-';
   };
   const plainCalculated = (n, unit = '', decimals = 1) => n == null ? '-' : `${fmt(n, decimals)}${unit ? ` ${unit}` : ''}`;
+  const plainDopplerInput = (key, unit = '', decimals = 1) => isDoppler ? plainInput(key, unit, decimals) : '-';
+  const plainDopplerCalculated = (n, unit = '', decimals = 1) => isDoppler ? plainCalculated(n, unit, decimals) : '-';
   const manual = (field, automatic) => String(manualMetricEdits[field] ?? automatic ?? '-').trim() || '-';
-  const relaxation = manual('relaxation', c.eOverA == null ? '-' : c.eOverA >= 1 ? 'Normal' : 'Prolongada');
-  const pulmonaryHypertension = manual('pulmonaryHypertension', data.get('doppler') !== 'Si' ? '-' : c.psap == null || c.psap < 36 ? 'No' : 'Sí');
+  const relaxation = isDoppler ? manual('relaxation', c.eOverA == null ? '-' : c.eOverA >= 1 ? 'Normal' : 'Prolongada') : '-';
+  const pulmonaryHypertension = isDoppler ? manual('pulmonaryHypertension', c.psap == null || c.psap < 36 ? 'No' : 'Sí') : '-';
   const paired = (leftLabel, leftValue, rightLabel = '', rightValue = '') => `${leftLabel}\t${leftValue}\t\t${rightLabel}${rightLabel ? '\t' + rightValue : ''}`;
   const tripled = (leftLabel, leftValue, middleLabel, middleValue, rightLabel, rightValue) => `${leftLabel}\t${leftValue}\t\t${middleLabel}\t${middleValue}\t\t${rightLabel}\t${rightValue}`;
   const descriptionNames = {
@@ -361,13 +565,13 @@ function plainReportText() {
     paired('Ap. Valv Aórtica:', plainInput('apAo', 'mm', 0), 'Diám. de raíz de aorta:', plainInput('aorticRoot', 'mm', 0)),
     tripled('Diámetro diastólico VD:', plainInput('rv', 'mm', 0), 'TAPSE:', plainInput('tapse', 'mm', 0), 'Vena cava inferior:', plainInput('ivc', 'mm', 0)),
     '', 'VALORACIÓN DOPPLER:',
-    paired('Velocidad E:', plainInput('eWave', 'm/s', 1), 'Velocidad A:', plainInput('aWave', 'm/s', 1)),
-    paired("Relacion E/e' septal:", plainInput('ePrime', '', 0), 'Patrón de relajación:', relaxation),
-    paired('Insuficiencia mitral:', plainInput('mr'), 'Insuficiencia tricuspídea:', plainInput('tr')),
-    paired('GTT:', plainInput('trGradient', 'mmHg', 0), 'PAD estimada:', plainInput('rap', 'mmHg', 0)),
-    paired('PSAP estimada:', plainCalculated(c.psap, 'mmHg', 0), 'Hipertensión pulmonar:', pulmonaryHypertension),
-    paired('Velocidad flujo aórtico:', plainInput('avVmax', 'm/s', 1), 'Gradiente pico aórtico:', plainCalculated(c.aorticPeakGradient, 'mmHg', 0)),
-    paired('Gradiente medio aórtico:', plainInput('aorticMeanGradient', 'mmHg', 0), 'Insuficiencia aórtica:', plainInput('ar')),
+    paired('Velocidad E:', plainDopplerInput('eWave', 'm/s', 1), 'Velocidad A:', plainDopplerInput('aWave', 'm/s', 1)),
+    paired("Relacion E/e' septal:", plainDopplerInput('ePrime', '', 0), 'Patrón de relajación:', relaxation),
+    paired('Insuficiencia mitral:', plainDopplerInput('mr'), 'Insuficiencia tricuspídea:', plainDopplerInput('tr')),
+    paired('GTT:', plainDopplerInput('trGradient', 'mmHg', 0), 'PAD estimada:', plainDopplerInput('rap', 'mmHg', 0)),
+    paired('PSAP estimada:', plainDopplerCalculated(c.psap, 'mmHg', 0), 'Hipertensión pulmonar:', pulmonaryHypertension),
+    paired('Velocidad flujo aórtico:', plainDopplerInput('avVmax', 'm/s', 1), 'Gradiente pico aórtico:', plainDopplerCalculated(c.aorticPeakGradient, 'mmHg', 0)),
+    paired('Gradiente medio aórtico:', plainDopplerInput('aorticMeanGradient', 'mmHg', 0), 'Insuficiencia aórtica:', plainDopplerInput('ar')),
     '', 'DESCRIPCIÓN:',
     ...descriptionLines.map(item => `${item.label}\t${item.text}`),
     '', 'CONCLUSIONES:',
@@ -473,8 +677,7 @@ el('#wordButton').addEventListener('click', async () => {
     const blob = new Blob([wordDocument], { type: 'application/msword' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    const patient = String(new FormData(form).get('patientName') || 'informe').replace(/[^a-z0-9áéíóúñ]+/gi, '_');
-    link.download = `Ecocardiograma_${patient}.doc`;
+    link.download = `${patientFileName(new FormData(form))}.doc`;
     document.body.appendChild(link);
     link.click();
     link.remove();
