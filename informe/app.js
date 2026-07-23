@@ -310,6 +310,21 @@ function blobToDataUrl(blob) {
   });
 }
 
+function base64ToRtfHex(base64) {
+  const binary = window.atob(base64);
+  const lines = [];
+  let line = '';
+  for (let index = 0; index < binary.length; index += 1) {
+    line += binary.charCodeAt(index).toString(16).padStart(2, '0');
+    if (line.length >= 128) {
+      lines.push(line);
+      line = '';
+    }
+  }
+  if (line) lines.push(line);
+  return lines.join('\n');
+}
+
 async function imageElementDataUrl(image) {
   try {
     const response = await fetch(image.currentSrc || image.src);
@@ -650,31 +665,23 @@ el('#wordButton').addEventListener('click', async () => {
     hiddenNoPrint = Array.from(report.querySelectorAll('.no-print')).map(node => ({ node, display: node.style.display }));
     hiddenNoPrint.forEach(({ node }) => { node.style.display = 'none'; });
     const canvas = await window.html2canvas(report, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false, imageTimeout: 15000 });
-    const imageData = canvas.toDataURL('image/png').split(',')[1];
-    const pageWidth = 595, pageHeight = 842;
-    const imageScale = Math.min(pageWidth / canvas.width, pageHeight / canvas.height);
-    const wordImageWidth = Math.round(canvas.width * imageScale);
-    const wordImageHeight = Math.round(canvas.height * imageScale);
-    const boundary = '----=_EcoInforme_' + Date.now();
+    const imageBase64 = canvas.toDataURL('image/png').split(',')[1];
+    const imageHex = base64ToRtfHex(imageBase64);
+    const pageWidthTwips = 11907;
+    const pageHeightTwips = 16840;
+    const imageScale = Math.min(pageWidthTwips / canvas.width, pageHeightTwips / canvas.height);
+    const imageWidthTwips = Math.round(canvas.width * imageScale);
+    const imageHeightTwips = Math.round(canvas.height * imageScale);
     const wordDocument = [
-      'MIME-Version: 1.0',
-      `Content-Type: multipart/related; boundary="${boundary}"`,
-      '',
-      `--${boundary}`,
-      'Content-Type: text/html; charset="utf-8"',
-      'Content-Location: file:///C:/EcoInforme.html',
-      '',
-      `<!doctype html><html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]--><style>@page Section1{size:210mm 297mm;margin:0;mso-header-margin:0;mso-footer-margin:0}div.Section1{page:Section1;width:${pageWidth}px;height:${pageHeight}px;margin:0;padding:0;overflow:hidden}html,body{width:${pageWidth}px;height:${pageHeight}px;margin:0!important;padding:0!important}img{display:block;width:${wordImageWidth}px!important;height:${wordImageHeight}px!important;margin:0!important;padding:0!important;border:0!important}</style></head><body><div class="Section1"><img src="file:///C:/EcoInforme.png" width="${wordImageWidth}" height="${wordImageHeight}" /></div></body></html>`,
-      '',
-      `--${boundary}`,
-      'Content-Type: image/png',
-      'Content-Transfer-Encoding: base64',
-      'Content-Location: file:///C:/EcoInforme.png',
-      '',
-      imageData,
-      `--${boundary}--`
-    ].join('\r\n');
-    const blob = new Blob([wordDocument], { type: 'application/msword' });
+      '{\\rtf1\\ansi\\deff0\\viewkind4\\uc1',
+      `\\paperw${pageWidthTwips}\\paperh${pageHeightTwips}\\margl0\\margr0\\margt0\\margb0`,
+      '\\pard\\qc\\sb0\\sa0',
+      `{\\pict\\pngblip\\picw${canvas.width}\\pich${canvas.height}\\picwgoal${imageWidthTwips}\\pichgoal${imageHeightTwips}`,
+      imageHex,
+      '}\\par',
+      '}'
+    ].join('\n');
+    const blob = new Blob([wordDocument], { type: 'application/rtf' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `${patientFileName(new FormData(form))}.doc`;
