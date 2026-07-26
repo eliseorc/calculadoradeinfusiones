@@ -21,7 +21,7 @@ function edvcPatientFileName(data) {
     .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  return cleanName || 'Informe EDVC';
+  return cleanName ? `${cleanName} VC` : 'Informe EDVC VC';
 }
 
 function setActiveStudy(study) {
