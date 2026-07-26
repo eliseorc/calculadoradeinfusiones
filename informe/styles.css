@@ -87,3 +87,60 @@
     transform-origin:top left!important;
   }
 }
+
+/* Selector de plantillas */
+[hidden]{display:none!important}
+.form-panel{overflow:hidden}
+.study-tabs{display:flex;gap:0;margin:-24px -24px 18px;border-bottom:1px solid #b9cbd1;background:#fff}
+.study-tab{flex:1;border-radius:0;padding:17px 10px;background:#fff;color:#60727d;font-size:16px;letter-spacing:.04em}
+.study-tab+.study-tab{border-left:1px solid #b9cbd1}
+.study-tab.is-active{background:var(--accent);color:#fff}
+#ecoForm>section:first-child,#edvcForm>section:first-child{border-top:0;padding-top:0}
+.form-intro{margin-bottom:14px}
+.form-intro p{margin-top:0}
+
+/* Carga EDVC */
+.edvc-patient-fields{grid-template-columns:repeat(12,minmax(0,1fr))}
+.edvc-patient-fields>:nth-child(1){grid-column:span 4}
+.edvc-patient-fields>:nth-child(2){grid-column:span 8}
+.edvc-patient-fields>:nth-child(3){grid-column:1/-1}
+.edvc-normal-toggle{display:flex!important;align-items:center;justify-content:flex-start;gap:9px;min-height:34px;padding:7px 10px;border:1px solid #cbd9df;border-radius:7px;background:#f5f9fa;cursor:pointer}
+.edvc-normal-toggle input{width:17px!important;height:17px;margin:0;accent-color:var(--accent)}
+.edvc-normal-imt-fields{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.edvc-imt-alert{grid-column:1/-1;margin:0}
+.edvc-region-form h3{display:flex;align-items:center;gap:8px}
+.edvc-region-fields{grid-template-columns:1.45fr .75fr}
+.edvc-region-fields .edvc-plaque-field{grid-column:span 1}
+.edvc-region-imt-alert{grid-column:1/-1;margin:0}
+.edvc-stenosis-details{margin-top:12px;border:1px solid var(--line);border-radius:7px;background:#f8fafb}
+.edvc-stenosis-details summary{padding:9px 10px;cursor:pointer;font-size:12px;font-weight:700;color:#37606c}
+.edvc-velocity-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:0 10px 10px}
+.edvc-calculated,.edvc-suggestion{display:grid;gap:5px;font-size:12px;font-weight:650;color:#486170}
+.edvc-calculated strong,.edvc-suggestion strong{display:flex;align-items:center;min-height:34px;padding:7px 8px;border:1px solid #cbd9df;border-radius:6px;background:#fff;color:var(--ink);font-size:13px}
+.edvc-suggestion{grid-column:span 2}
+.edvc-suggestion strong{font-size:12px}
+.edvc-stenosis-cheat{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:0 10px 10px;padding:8px 10px;border-left:3px solid #9eb8c0;background:#edf4f5;color:#526975;font-size:11px;line-height:1.4}
+.edvc-stenosis-cheat>div{display:grid;gap:2px}
+.edvc-stenosis-cheat strong{color:#365560;font-size:11px}
+
+/* Informe EDVC */
+.edvc-report .report-header{padding-bottom:5px}
+.edvc-report .patient-line #edvcReportDate{margin:3px 0 0;color:var(--muted);font-size:15px!important;line-height:1.1!important}
+.edvc-technique-section{padding-top:9px}
+.edvc-technique{font-size:13px;line-height:1.45;min-height:0;white-space:pre-wrap}
+.edvc-description-section{padding-top:8px}
+.edvc-description{display:grid;gap:8px}
+.edvc-report-region{display:grid;gap:0}
+.edvc-region-heading{height:19px;display:flex;align-items:center;justify-content:center;margin-bottom:7px;padding:0 8px;border-left:3px solid var(--accent);background:#e7f2f3;color:var(--accent-dark);font-size:12px;font-weight:700;letter-spacing:.04em}
+.edvc-report-row{display:grid;grid-template-columns:24% 76%;align-items:start;font-size:12px;line-height:1.55}
+.edvc-report-label{padding:1px 5px;text-align:right;font-weight:700;white-space:nowrap}
+.edvc-report-text{align-self:start;min-width:0;min-height:0;padding:1px 5px}
+.edvc-report .conclusion-heading{margin-bottom:7px!important}
+.edvc-report .conclusion-text{line-height:1.6!important}
+
+@media(max-width:620px){
+  .edvc-patient-fields,.edvc-region-fields,.edvc-velocity-grid{grid-template-columns:1fr 1fr}
+  .edvc-patient-fields>*{grid-column:auto!important}
+  .edvc-patient-fields>:nth-child(2){grid-column:1/-1!important}
+  .edvc-suggestion{grid-column:1/-1}
+}

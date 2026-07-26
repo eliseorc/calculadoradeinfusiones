@@ -294,6 +294,7 @@ el('#clearButton').addEventListener('click', () => {
   el('#description').textContent = '';
   el('#conclusions').textContent = '';
   render();
+  window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
 });
 el('#printButton').addEventListener('click', () => window.print());
 
@@ -586,7 +587,7 @@ function plainReportText() {
     'MEDIDAS 2D:',
     paired('Diám. interno en diástole:', plainInput('lvDd', 'mm', 0), 'Diám. interno en sístole:', plainInput('lvDs', 'mm', 0)),
     paired('Fracción de acortamiento:', plainCalculated(c.shortening, '%', 0), 'Fracción de eyección:', plainInput('lvef', '%', 0)),
-    paired('SIV en diástole:', plainInput('ivsd', 'mm', 1), 'PP en diástole:', plainInput('pwd', 'mm', 0)),
+    paired('SIV en diástole:', plainInput('ivsd', 'mm', 0), 'PP en diástole:', plainInput('pwd', 'mm', 0)),
     paired('Índice de masa ventricular:', plainCalculated(c.mass, 'g/m²', 0), 'EPR:', plainCalculated(c.rwt, '', 2)),
     paired('Diám. de aurícula izq.:', plainInput('la', 'mm', 0), 'Área de aurícula izq.:', plainInput('laArea', 'cm²', 0)),
     paired('Ap. Valv Aórtica:', plainInput('apAo', 'mm', 0), 'Diám. de raíz de aorta:', plainInput('aorticRoot', 'mm', 0)),
@@ -600,7 +601,10 @@ function plainReportText() {
     paired('Velocidad flujo aórtico:', plainDopplerInput('avVmax', 'm/s', 1), 'Gradiente pico aórtico:', plainDopplerCalculated(c.aorticPeakGradient, 'mmHg', 0)),
     paired('Gradiente medio aórtico:', plainDopplerInput('aorticMeanGradient', 'mmHg', 0), 'Insuficiencia aórtica:', plainDopplerInput('ar')),
     '', 'DESCRIPCIÓN:',
-    ...descriptionLines.map(item => `${item.label}\t${item.text}`),
+    ...descriptionLines.map(item => {
+      const text = item.text.replace(/\s+/g, ' ').trim();
+      return `${item.label} ${text}`;
+    }),
     '', 'CONCLUSIONES:',
     ...compactConclusions,
     '', '', '\t\tDr. RODRIGUEZ CLAUS, ELISEO', '\t\tEsp. en Cardiología - MP 118.231'
@@ -664,7 +668,7 @@ el('#wordButton').addEventListener('click', async () => {
   let hiddenNoPrint = [];
   try {
     button.disabled = true;
-    button.textContent = 'Generando Word…';
+    button.textContent = 'Generando .doc…';
     if (!window.html2canvas) throw new Error('No se cargó el generador de imagen');
     const report = el('#report');
     await Promise.all(Array.from(report.querySelectorAll('img')).map(image => image.complete ? Promise.resolve() : new Promise(resolve => {
@@ -715,5 +719,10 @@ el('#wordButton').addEventListener('click', async () => {
     button.textContent = originalLabel;
   }
 });
-form.elements.studyDate.value = new Date().toISOString().slice(0,10);
+const ecoToday = new Date();
+form.elements.studyDate.value = [
+  ecoToday.getFullYear(),
+  (`0${ecoToday.getMonth() + 1}`).slice(-2),
+  (`0${ecoToday.getDate()}`).slice(-2)
+].join('-');
 render();

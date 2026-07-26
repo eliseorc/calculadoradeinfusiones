@@ -9,12 +9,11 @@
   <body>
     <main>
       <aside class="form-panel no-print">
-        <div class="form-intro">
-          <h2>INFORME</h2>
-          <p>Completar valores disponibles. Se actualiza automaticamente.</p>
+        <div class="study-tabs" role="tablist" aria-label="Tipo de informe">
+          <button class="study-tab is-active" id="ecoTab" type="button" role="tab" aria-selected="true" data-study-tab="eco">ECOCARDIOGRAMA</button>
+          <button class="study-tab" id="edvcTab" type="button" role="tab" aria-selected="false" data-study-tab="edvc">EDVC</button>
         </div>
-
-        <form id="ecoForm" autocomplete="off">
+        <form id="ecoForm" class="eco-only" autocomplete="off">
           <section>
             <h3>Paciente</h3>
             <div class="fields patient-fields">
@@ -72,9 +71,115 @@
             </div>
           </section>
         </form>
+
+        <form id="edvcForm" class="edvc-only" autocomplete="off" hidden>
+          <section>
+            <h3>Paciente</h3>
+            <div class="fields edvc-patient-fields">
+              <label>Fecha del estudio<input name="studyDate" type="date" /></label>
+              <label>Apellido y nombre<input name="patientName" placeholder="Apellido, Nombre" /></label>
+              <label class="edvc-normal-toggle"><input name="normalStudy" type="checkbox" checked />Estudio normal</label>
+              <div class="edvc-normal-imt-fields">
+                <label>EMI izquierdo<input name="normalLeftImt" inputmode="decimal" placeholder="mm" /></label>
+                <label>EMI derecho<input name="normalRightImt" inputmode="decimal" placeholder="mm" /></label>
+                <div id="edvcNormalImtAlert" class="data-check edvc-imt-alert" role="alert" hidden></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="edvc-region-form" data-side="left">
+            <h3>Región izquierda</h3>
+            <div class="fields edvc-region-fields">
+              <label>Hallazgo principal<select name="leftFinding">
+                <option value="normal">Normal</option>
+                <option value="imt">Engrosamiento mediointimal</option>
+                <option value="plaque-lt50" selected>Placa no estenosante (10–20%)</option>
+                <option value="stenosis-50-69">Estenosis ACI 50–69%</option>
+                <option value="stenosis-ge70">Estenosis ACI ≥70%</option>
+                <option value="near-occlusion">Casi oclusión ACI</option>
+                <option value="occlusion">Oclusión ACI</option>
+              </select></label>
+              <label class="edvc-imt-field" hidden>EMI máximo<input name="leftImt" inputmode="decimal" placeholder="mm" /></label>
+              <div id="leftImtAlert" class="data-check edvc-region-imt-alert" role="alert" hidden></div>
+              <label class="edvc-plaque-field edvc-location-field" hidden>Localización<select name="leftPlaqueLocation"><option value="bulb-ica" selected>Bulbo / ACI</option><option value="cca">Carótida común</option><option value="eca">Carótida externa</option><option value="multiple">Múltiples segmentos</option></select></label>
+              <label class="edvc-plaque-field" hidden>Morfología<select name="leftPlaqueType"><option value="fibrosa">Fibrosa</option><option value="fibrocalcica" selected>Fibrocálcica</option><option value="calcificada">Calcificada</option><option value="heterogenea">Heterogénea</option></select></label>
+              <label>Flujo vertebral<select name="leftVertebral"><option value="anterograde" selected>Anterógrado</option><option value="alternating">Alternante</option><option value="retrograde">Retrógrado</option><option value="not-seen">No identificable</option></select></label>
+            </div>
+            <details class="edvc-stenosis-details">
+              <summary>Criterios de estenosis (opcional)</summary>
+              <div class="edvc-velocity-grid">
+                <label>VPS ACC<input name="leftCcaPsv" inputmode="decimal" placeholder="cm/s" /></label>
+                <label>VPS ACI<input name="leftIcaPsv" inputmode="decimal" placeholder="cm/s" /></label>
+                <label>VPD ACI<input name="leftIcaEdv" inputmode="decimal" placeholder="cm/s" /></label>
+                <div class="edvc-calculated"><span>Cociente ACI/ACC</span><strong id="leftRatio">—</strong></div>
+                <div class="edvc-suggestion"><span>Sugerencia IAC 2023</span><strong id="leftSuggestion">Completar velocidades</strong></div>
+              </div>
+                <div class="edvc-stenosis-cheat">
+                  <div>
+                    <strong>ESTENOSIS &gt;70%</strong>
+                    <span>VPS &gt;230 cm/seg</span>
+                    <span>VPD &gt;100 cm/seg</span>
+                    <span>Cociente &gt;4</span>
+                  </div>
+                  <div>
+                    <strong>ESTENOSIS 50–70%</strong>
+                    <span>VPS 125–230 cm/seg</span>
+                    <span>VPD 40–100 cm/seg</span>
+                    <span>Cociente 2–4</span>
+                  </div>
+                </div>
+            </details>
+          </section>
+
+          <section class="edvc-region-form" data-side="right">
+            <h3>Región derecha</h3>
+            <div class="fields edvc-region-fields">
+              <label>Hallazgo principal<select name="rightFinding">
+                <option value="normal">Normal</option>
+                <option value="imt">Engrosamiento mediointimal</option>
+                <option value="plaque-lt50" selected>Placa no estenosante (10–20%)</option>
+                <option value="stenosis-50-69">Estenosis ACI 50–69%</option>
+                <option value="stenosis-ge70">Estenosis ACI ≥70%</option>
+                <option value="near-occlusion">Casi oclusión ACI</option>
+                <option value="occlusion">Oclusión ACI</option>
+              </select></label>
+              <label class="edvc-imt-field" hidden>EMI máximo<input name="rightImt" inputmode="decimal" placeholder="mm" /></label>
+              <div id="rightImtAlert" class="data-check edvc-region-imt-alert" role="alert" hidden></div>
+              <label class="edvc-plaque-field edvc-location-field" hidden>Localización<select name="rightPlaqueLocation"><option value="bulb-ica" selected>Bulbo / ACI</option><option value="cca">Carótida común</option><option value="eca">Carótida externa</option><option value="multiple">Múltiples segmentos</option></select></label>
+              <label class="edvc-plaque-field" hidden>Morfología<select name="rightPlaqueType"><option value="fibrosa">Fibrosa</option><option value="fibrocalcica" selected>Fibrocálcica</option><option value="calcificada">Calcificada</option><option value="heterogenea">Heterogénea</option></select></label>
+              <label>Flujo vertebral<select name="rightVertebral"><option value="anterograde" selected>Anterógrado</option><option value="alternating">Alternante</option><option value="retrograde">Retrógrado</option><option value="not-seen">No identificable</option></select></label>
+            </div>
+            <details class="edvc-stenosis-details">
+              <summary>Criterios de estenosis (opcional)</summary>
+              <div class="edvc-velocity-grid">
+                <label>VPS ACC<input name="rightCcaPsv" inputmode="decimal" placeholder="cm/s" /></label>
+                <label>VPS ACI<input name="rightIcaPsv" inputmode="decimal" placeholder="cm/s" /></label>
+                <label>VPD ACI<input name="rightIcaEdv" inputmode="decimal" placeholder="cm/s" /></label>
+                <div class="edvc-calculated"><span>Cociente ACI/ACC</span><strong id="rightRatio">—</strong></div>
+                <div class="edvc-suggestion"><span>Sugerencia IAC 2023</span><strong id="rightSuggestion">Completar velocidades</strong></div>
+              </div>
+                <div class="edvc-stenosis-cheat">
+                  <div>
+                    <strong>ESTENOSIS &gt;70%</strong>
+                    <span>VPS &gt;230 cm/seg</span>
+                    <span>VPD &gt;100 cm/seg</span>
+                    <span>Cociente &gt;4</span>
+                  </div>
+                  <div>
+                    <strong>ESTENOSIS 50–70%</strong>
+                    <span>VPS 125–230 cm/seg</span>
+                    <span>VPD 40–100 cm/seg</span>
+                    <span>Cociente 2–4</span>
+                  </div>
+                </div>
+            </details>
+          </section>
+
+          <div class="form-actions"><button class="secondary" id="edvcClearButton" type="button">Nuevo informe</button></div>
+        </form>
       </aside>
 
-      <section class="report-wrap">
+      <section class="report-wrap eco-only">
         <article class="report" id="report">
           <img class="institutional-banner" src="assets/institutional-banner.png" alt="Sanatorio Argentino — Servicio de Ecografía" />
           <div class="report-header">
@@ -93,11 +198,36 @@
           </section>
           <div class="signature"><img src="assets/signature.png" alt="Firma y sello del Dr. Eliseo Rodríguez Claus" /></div>
         </article>
-        <div class="report-actions no-print"><button class="secondary" id="copyTextButton" type="button">Copiar texto simple</button><button class="secondary" id="wordButton" type="button">Descargar DOC visual</button><button class="secondary" id="printButton" type="button">Imprimir</button><button class="primary" id="pdfButton" type="button">Descargar PDF</button></div>
+        <div class="report-actions no-print"><button class="primary" id="pdfButton" type="button">Descargar PDF</button><button class="secondary" id="wordButton" type="button">Descargar .doc</button><button class="secondary" id="copyTextButton" type="button">Copiar texto simple</button><button class="secondary" id="printButton" type="button">Imprimir</button></div>
+      </section>
+
+      <section class="report-wrap edvc-only" hidden>
+        <article class="report edvc-report" id="edvcReport">
+          <img class="institutional-banner" src="assets/institutional-banner.png" alt="Sanatorio Argentino — Servicio de Ecografía" />
+          <div class="report-header">
+            <div><p class="eyebrow">INFORME</p><h2 id="edvcReportTitle">ECODOPPLER ARTERIAL DE VASOS DE CUELLO</h2></div>
+          </div>
+          <div class="patient-line"><strong id="edvcReportPatient">Apellido y nombre: —</strong><p id="edvcReportDate"></p></div>
+          <div class="notice">Borrador automático: revisar, completar y validar clínicamente antes de emitir.</div>
+          <section class="report-section edvc-technique-section">
+            <p id="edvcTechnique" class="editable edvc-technique" contenteditable="true"></p>
+          </section>
+          <section class="report-section edvc-description-section">
+            <div class="description-title"><button class="secondary no-print" id="edvcRegenerateButton" type="button">Regenerar texto</button></div>
+            <div id="edvcDescriptions" class="edvc-description"></div>
+          </section>
+          <section class="report-section conclusion">
+            <div class="description-title"><button class="secondary no-print" id="edvcRegenerateConclusionsButton" type="button">Regenerar texto</button></div>
+            <div id="edvcConclusions" class="conclusion-grid"></div>
+          </section>
+          <div class="signature"><img src="assets/signature.png" alt="Firma y sello del Dr. Eliseo Rodríguez Claus" /></div>
+        </article>
+        <div class="report-actions no-print"><button class="primary" id="edvcPdfButton" type="button">Descargar PDF</button><button class="secondary" id="edvcWordButton" type="button">Descargar .doc</button><button class="secondary" id="edvcCopyTextButton" type="button">Copiar texto simple</button><button class="secondary" id="edvcPrintButton" type="button">Imprimir</button></div>
       </section>
     </main>
     <script src="assets/html2canvas.min.js"></script>
     <script src="assets/jspdf.umd.min.js"></script>
     <script src="app.js"></script>
+    <script src="edvc.js"></script>
   </body>
 </html>
