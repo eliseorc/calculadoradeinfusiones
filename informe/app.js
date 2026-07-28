@@ -94,6 +94,7 @@ function autoDescriptions(data, c) {
   const sex = data.get('sex');
   const age = number(data, 'age');
   const isDoppler = data.get('doppler') === 'Si';
+  const goodWindow = String(data.get('goodWindow') || '').toLowerCase() === 'si';
   const dd = number(data, 'lvDd'); const ef = number(data, 'lvef'); const mass = c.mass;
   const geometry = leftVentricleGeometry(sex, mass, c.rwt);
   const size = leftVentricleSize(dd);
@@ -120,7 +121,7 @@ function autoDescriptions(data, c) {
           : `Ventrículo de dimensiones conservadas, con ${functionText}. IMVI ${textNumber(mass)} g/m².`;
     }
   }
-  const motion = data.get('goodWindow').toLowerCase() === 'si' ? 'No se evidenciaron alteraciones de motilidad parietal en reposo.' : 'En reposo no impresiona presentar alteraciones de motilidad parietal (ventana acústica subóptima).';
+  const motion = goodWindow ? 'No se evidenciaron alteraciones de motilidad parietal en reposo.' : 'En reposo no impresiona presentar alteraciones de motilidad parietal (ventana acústica subóptima).';
   const relaxation = !isDoppler || c.eOverA == null ? '' : c.eOverA >= 1 ? 'Patrón diastólico de relajación normal.' : 'Patrón diastólico de relajación prolongada.';
   const rv = number(data, 'rv'); const tapse = number(data, 'tapse'); const ivc = number(data, 'ivc');
   let right = 'Completar medidas del ventrículo derecho.';
@@ -160,11 +161,17 @@ function autoDescriptions(data, c) {
     aortic = 'Prótesis valvular aórtica normoinserta.';
   } else if (isDoppler && c.aorticStenosis) {
     const restriction = c.aorticStenosis === 'leve' ? 'apertura levemente restringida' : c.aorticStenosis === 'moderada' ? 'apertura restringida en grado moderado' : 'apertura severamente restringida';
-    aortic = `Es tricúspide, con esclerocalcificación de sus valvas y ${restriction}. Vel max. ${textNumber(vmax, 1)} m/seg. GM ${textNumber(gm)} mmHg. GP ${textNumber(c.aorticPeakGradient)} mmHg.`;
+    aortic = `Esclerocalcificación de sus valvas, con ${restriction}. Vel max. ${textNumber(vmax, 1)} m/seg. GM ${textNumber(gm)} mmHg. GP ${textNumber(c.aorticPeakGradient)} mmHg.`;
     if (c.ava) aortic += ` Se estimó área por ecuación de continuidad en ${fmtUpTo(c.ava, 2)} cm² (TSVI ${textNumber(number(data, 'lvotDiam'))} cm).`;
     if (c.dimensionlessIndex) aortic += ` Cociente adimensional: ${fmtUpTo(c.dimensionlessIndex, 2)}.`;
   } else {
-    aortic = !isDoppler && age && age > 80 ? 'Esclerosis de sus valvas, con apertura conservada.' : age && age > 60 ? 'Ligera esclerosis de sus valvas, con apertura conservada.' : 'Es trivalva, con apertura conservada.';
+    aortic = !isDoppler && age && age > 80
+      ? 'Esclerosis de sus valvas, con apertura conservada.'
+      : age && age > 60
+        ? 'Ligera esclerosis de sus valvas, con apertura conservada.'
+        : goodWindow
+          ? 'Es trivalva, con apertura conservada.'
+          : 'Apertura conservada.';
     if (isDoppler && vmax) aortic += ` Vel max. ${textNumber(vmax, 1)} m/seg.`;
   }
   if (isDoppler && !aorticProsthesis) aortic += !ar || ar === '-' || ar === 'no' ? ' Sin insuficiencia.' : ` Insuficiencia ${ar}.`;
