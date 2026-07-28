@@ -1,6 +1,7 @@
 const form = document.querySelector('#ecoForm');
 const el = (id) => document.querySelector(id);
 const manualMetricEdits = {};
+let ecoInitialFormState = '';
 const number = (data, key) => {
   const raw = String(data.get(key) ?? '').trim().replace(',', '.');
   const v = Number(raw);
@@ -52,10 +53,26 @@ function highlightedDescription(text) {
   return escapeHtml(text).replace(/(Completar[^.]*\.)/g, '<span class="missing-description">$1</span>');
 }
 function descriptionRow(label, text) {
-  const editableLabel = label === 'RAÍZ AÓRTICA:';
+  const editableLabel = label === 'RAÍZ AÓRTICA:' || label === 'PERICARDIO:';
   return `<div class="description-row"><div class="description-label${editableLabel ? ' editable' : ''}"${editableLabel ? ' contenteditable="true"' : ''}>${label}</div><div class="description-text editable" contenteditable="true">${highlightedDescription(text)}</div></div>`;
 }
 function textNumber(n, decimals = 0) { return n == null ? null : fmt(n, decimals); }
+function leftVentricleSize(dd) {
+  if (dd == null) return null;
+  if (dd <= 56) return { degree: null };
+  if (dd < 60) return { degree: 'leve' };
+  if (dd < 70) return { degree: 'moderada' };
+  return { degree: 'severa' };
+}
+function leftVentricleSystolicFunction(ef) {
+  if (ef == null) return null;
+  if (ef >= 55) return { preserved: true, text: 'función sistólica conservada' };
+  if (ef >= 45) return { preserved: false, text: 'disfunción sistólica leve' };
+  if (ef >= 42) return { preserved: false, text: 'disfunción sistólica leve a moderada' };
+  if (ef >= 36) return { preserved: false, text: 'disfunción sistólica moderada' };
+  if (ef >= 34) return { preserved: false, text: 'disfunción sistólica moderada a severa' };
+  return { preserved: false, text: 'disfunción sistólica severa' };
+}
 function leftVentricleGeometry(sex, mass, rwt) {
   const thresholds = sex === 'M'
     ? { normal: 115, mild: 131, moderate: 148 }
@@ -79,19 +96,28 @@ function autoDescriptions(data, c) {
   const isDoppler = data.get('doppler') === 'Si';
   const dd = number(data, 'lvDd'); const ef = number(data, 'lvef'); const mass = c.mass;
   const geometry = leftVentricleGeometry(sex, mass, c.rwt);
+  const size = leftVentricleSize(dd);
+  const systolicFunction = leftVentricleSystolicFunction(ef);
   let left = 'Completar medidas del ventrículo izquierdo.';
   if (dd && ef && mass && geometry) {
-    const functionText = ef >= 55 ? 'función sistólica conservada' : 'función sistólica a valorar';
-    const sizeText = dd <= 56 ? '' : 'con dilatación ventricular, ';
+    const functionText = systolicFunction.text;
     if (geometry.remodeling) {
-      left = `${sizeText}Ventrículo con remodelado concéntrico y ${functionText}. IMVI ${textNumber(mass)} g/m². EPR ${textNumber(c.rwt, 2)}.`;
+      left = size?.degree
+        ? `Dilatación ${size.degree}, remodelado concéntrico y ${functionText}. IMVI ${textNumber(mass)} g/m². EPR ${textNumber(c.rwt, 2)}.`
+        : `Ventrículo con remodelado concéntrico y ${functionText}. IMVI ${textNumber(mass)} g/m². EPR ${textNumber(c.rwt, 2)}.`;
     } else if (geometry.severity) {
       const hypertrophy = geometry.severity === 'leve'
-        ? `Leve hipertrofia ${geometry.pattern || 'de geometría a valorar'} con `
-        : `Hipertrofia ${geometry.pattern || 'de geometría a valorar'} ${geometry.severity} con `;
-      left = `${sizeText}${hypertrophy}${functionText}. IMVI ${textNumber(mass)} g/m².${c.rwt != null ? ` EPR ${textNumber(c.rwt, 2)}.` : ''}`;
+        ? `leve hipertrofia ${geometry.pattern || 'de geometría a valorar'}`
+        : `hipertrofia ${geometry.pattern || 'de geometría a valorar'} ${geometry.severity}`;
+      left = size?.degree
+        ? `Dilatación ${size.degree}, ${hypertrophy} y ${functionText}. IMVI ${textNumber(mass)} g/m².${c.rwt != null ? ` EPR ${textNumber(c.rwt, 2)}.` : ''}`
+        : `${hypertrophy.charAt(0).toUpperCase()}${hypertrophy.slice(1)} con ${functionText}. IMVI ${textNumber(mass)} g/m².${c.rwt != null ? ` EPR ${textNumber(c.rwt, 2)}.` : ''}`;
     } else {
-      left = `${sizeText}Ventrículo de dimensiones y ${functionText}. IMVI ${textNumber(mass)} g/m².`;
+      left = size?.degree
+        ? `Dilatación ${size.degree}, con ${functionText}. IMVI ${textNumber(mass)} g/m².`
+        : systolicFunction.preserved
+          ? `Ventrículo de dimensiones y ${functionText}. IMVI ${textNumber(mass)} g/m².`
+          : `Ventrículo de dimensiones conservadas, con ${functionText}. IMVI ${textNumber(mass)} g/m².`;
     }
   }
   const motion = data.get('goodWindow').toLowerCase() === 'si' ? 'No se evidenciaron alteraciones de motilidad parietal en reposo.' : 'En reposo no impresiona presentar alteraciones de motilidad parietal (ventana acústica subóptima).';
@@ -116,7 +142,7 @@ function autoDescriptions(data, c) {
         : laArea < 30 ? `Leve dilatación. Área: ${textNumber(laArea)} cm².`
           : laArea < 40 ? `Dilatación moderada. Área: ${textNumber(laArea)} cm².`
             : `Dilatación severa. Área: ${textNumber(laArea)} cm².`;
-  const ra = !raArea ? 'Completar área de aurícula derecha.' : raArea <= 18 ? `Normal. Área: ${textNumber(raArea)} cm².` : `Dilatada. Área: ${textNumber(raArea)} cm².`;
+  const ra = !raArea ? 'Normal.' : raArea <= 18 ? `Normal. Área: ${textNumber(raArea)} cm².` : `Dilatada. Área: ${textNumber(raArea)} cm².`;
   const mr = String(data.get('mr') || '').toLowerCase();
   const mitralBase = age && age > 80 ? 'Esclerocalcificación del anillo valvular, con apertura conservada.' : age && age > 60 ? 'De valvas finas, con ligera esclerosis del anillo valvular, apertura conservada.' : 'De valvas finas, con apertura conservada.';
   const mitralBidimensional = age && age > 80 ? 'Esclerocalcificación del anillo valvular, con apertura conservada.' : age && age > 60 ? 'De valvas finas, con ligera esclerosis del anillo valvular, apertura conservada y cierre a nivel del plano.' : 'De valvas finas, con apertura conservada y cierre valvular a nivel del plano.';
@@ -142,11 +168,30 @@ function autoDescriptions(data, c) {
     if (isDoppler && vmax) aortic += ` Vel max. ${textNumber(vmax, 1)} m/seg.`;
   }
   if (isDoppler && !aorticProsthesis) aortic += !ar || ar === '-' || ar === 'no' ? ' Sin insuficiencia.' : ` Insuficiencia ${ar}.`;
-  const root = number(data, 'aorticRoot'); const rootText = !root ? 'Completar diámetro de raíz aórtica.' : root < 37 ? 'Normal.' : `Dilatada. ${textNumber(root)} mm.`;
+  const root = number(data, 'aorticRoot');
+  const tubularAorta = number(data, 'tubularAorta');
+  const pericardialEffusion = String(data.get('pericardialEffusion') || 'No').trim().toLowerCase();
+  const hasPericardialEffusion = pericardialEffusion !== 'no' && pericardialEffusion !== '-';
+  const pericardialCompromise = String(data.get('pericardialCompromise') || 'No').trim().toLowerCase() === 'si';
+  const pericardialAnterior = number(data, 'pericardialAnterior');
+  const pericardialPosterior = number(data, 'pericardialPosterior');
+  const rootText = tubularAorta
+    ? `Pérdida de arquitectura sinotubular con leve dilatación: la porción tubular alcanza ${fmtUpTo(tubularAorta, 1)} mm.`
+    : !root ? 'Completar diámetro de raíz aórtica.'
+      : root < 37 ? 'Normal.'
+        : `Dilatada. ${textNumber(root)} mm.`;
+  const pericardialMeasurements = [];
+  if (pericardialAnterior != null) pericardialMeasurements.push(`${fmtUpTo(pericardialAnterior, 1)} mm de espesor sobre pared libre de ventrículo derecho`);
+  if (pericardialPosterior != null) pericardialMeasurements.push(`${fmtUpTo(pericardialPosterior, 1)} mm sobre pared inferolateral`);
+  const pericardialMeasurementText = pericardialMeasurements.length ? `, de ${pericardialMeasurements.join(', ')}` : '';
+  const pericardialText = pericardialEffusion === 'laminar'
+    ? 'Derrame pericárdico laminar.'
+    : `Derrame pericárdico ${pericardialEffusion}, circunferencial${pericardialMeasurementText}, ${pericardialCompromise ? 'con' : 'sin'} signos de compromiso hemodinámico.`;
   return [
     ['VENTRÍCULO IZQUIERDO:', [left, motion, relaxation].filter(Boolean).join('\n')], ['VENTRÍCULO DERECHO:', right],
     ['AURÍCULA IZQUIERDA:', la], ['AURÍCULA DERECHA:', ra], ['VÁLVULA MITRAL:', mitral],
-    ['VÁLVULA TRICÚSPIDE:', tricuspid], ['VÁLVULA AÓRTICA:', aortic], ['RAÍZ AÓRTICA:', rootText]
+    ['VÁLVULA TRICÚSPIDE:', tricuspid], ['VÁLVULA AÓRTICA:', aortic],
+    [hasPericardialEffusion ? 'PERICARDIO:' : 'RAÍZ AÓRTICA:', hasPericardialEffusion ? pericardialText : rootText]
   ];
 }
 function renderDescriptions(data, c, force = false) {
@@ -159,15 +204,22 @@ function autoConclusions(data, c) {
   const sex = data.get('sex'); const dd = number(data, 'lvDd'); const ef = number(data, 'lvef'); const mass = c.mass;
   const isDoppler = data.get('doppler') === 'Si';
   const geometry = leftVentricleGeometry(sex, mass, c.rwt);
+  const size = leftVentricleSize(dd);
+  const systolicFunction = leftVentricleSystolicFunction(ef);
   const conclusions = [];
-  if (dd && ef && mass && geometry && dd <= 56 && ef >= 55) {
-    if (geometry.remodeling) conclusions.push('Ventrículo izquierdo con remodelado concéntrico y función sistólica conservada.');
+  if (dd && ef && mass && geometry && systolicFunction) {
+    const functionText = systolicFunction.text;
+    if (size?.degree) {
+      conclusions.push(`Dilatación ${size.degree} del ventrículo izquierdo, con ${functionText}.`);
+    } else if (geometry.remodeling) conclusions.push(`Ventrículo izquierdo con remodelado concéntrico y ${functionText}.`);
     else if (geometry.severity) {
       const hypertrophy = geometry.severity === 'leve'
         ? `leve hipertrofia ${geometry.pattern || 'de geometría a valorar'}`
         : `hipertrofia ${geometry.pattern || 'de geometría a valorar'} ${geometry.severity}`;
-      conclusions.push(`Ventrículo izquierdo con ${hypertrophy} y función sistólica conservada.`);
-    } else conclusions.push('Ventrículo izquierdo de dimensiones y función sistólica conservada.');
+      conclusions.push(`Ventrículo izquierdo con ${hypertrophy} y ${functionText}.`);
+    } else conclusions.push(systolicFunction.preserved
+      ? 'Ventrículo izquierdo de dimensiones y función sistólica conservada.'
+      : `Ventrículo izquierdo de dimensiones conservadas, con ${functionText}.`);
   } else if (dd || ef || mass) conclusions.push('Ventrículo izquierdo: completar valoración según medidas y función sistólica.');
   if (!isDoppler) {
     const laArea = number(data, 'laArea');
@@ -200,7 +252,17 @@ function autoConclusions(data, c) {
   }
   const shunts = String(data.get('shunts') || '').toLowerCase();
   if (shunts === 'no') conclusions.push('Sin evidencias de coartación aórtica o shunts intracardíacos.');
-  conclusions.push('Pericardio libre de derrame.');
+  const pericardialEffusion = String(data.get('pericardialEffusion') || 'No').trim().toLowerCase();
+  if (pericardialEffusion === 'no' || pericardialEffusion === '-') conclusions.push('Pericardio libre de derrame.');
+  else {
+    const compromise = String(data.get('pericardialCompromise') || 'No').trim().toLowerCase() === 'si';
+    const compromiseText = pericardialEffusion === 'severo'
+      ? `, ${compromise ? 'con' : 'sin'} signos de compromiso hemodinámico`
+      : pericardialEffusion === 'moderado' && compromise
+        ? ', con signos de compromiso hemodinámico'
+        : '';
+    conclusions.push(`Derrame pericárdico ${pericardialEffusion}${compromiseText}.`);
+  }
   return conclusions;
 }
 function renderConclusions(data, c, force = false) {
@@ -216,6 +278,8 @@ function automaticReportTitle(data) {
 }
 function render() {
   const data = new FormData(form); const c = calculate(data);
+  const showPericardialDetails = ['Leve', 'Moderado', 'Severo'].includes(String(data.get('pericardialEffusion') || ''));
+  form.querySelectorAll('.pericardial-detail').forEach(field => { field.hidden = !showPericardialDetails; });
   const missingPatientData = [
     ['sex', 'sexo'], ['age', 'edad'], ['weight', 'peso'], ['height', 'altura']
   ].filter(([key]) => !String(data.get(key) || '').trim()).map(([, label]) => label);
@@ -241,8 +305,8 @@ function render() {
   el('#metrics').innerHTML = [
     measureHeading('M E D I D A S&nbsp;&nbsp; 2 D', c.asc ? `ASC: ${fmt(c.asc, 0)} m²` : ''),
     '<div class="measure-subhead">CAVIDADES IZQUIERDAS:</div>',
-    measureRow('Diámetro interno de VI en diástole:', val('lvDd','mm',0), '[&lt;55 mm]', 'Diámetro interno en sístole:', val('lvDs','mm',0), ''),
-    measureRow('Fracción de acortamiento:', calculated(c.shortening,'%',0), '[&gt;28%]', 'Fracción de eyección:', val('lvef','%',0), '[&gt;55%]'),
+    measureRow('Diámetro interno de VI en diástole:', val('lvDd','mm',0), '[≤56 mm]', 'Diámetro interno en sístole:', val('lvDs','mm',0), ''),
+    measureRow('Fracción de acortamiento:', calculated(c.shortening,'%',0), '[&gt;28%]', 'Fracción de eyección:', val('lvef','%',0), '[≥55%]'),
     measureRow('Septum interventricular en diástole:', val('ivsd','mm',0), '[&lt;12 mm]', 'Pared posterior en diástole:', val('pwd','mm',0), '[&lt;12 mm]'),
     measureRow('Índice de masa ventricular:', calculated(c.mass,'g/m²',0), '[♂≤115 / ♀≤95 g/m²]', 'Espesor parietal relativo:', calculated(c.rwt,'',2), '[≤0,42]'),
     measureRow('Diám. de aurícula izq.:', val('la','mm',0), '[&lt;40 mm]', 'Área de aurícula izquierda:', val('laArea','cm²',0), '[&lt;20 cm²]'),
@@ -266,7 +330,26 @@ function render() {
   const lv = number(data,'lvef');
   renderConclusions(data, c);
 }
-form.addEventListener('input', render); form.addEventListener('change', render);
+function ecoComparableFormState() {
+  return JSON.stringify(Array.from(new FormData(form).entries()).filter(([key]) => key !== 'studyDate'));
+}
+function updateNewReportButtonState() {
+  el('#clearButton').classList.toggle('has-data', Boolean(ecoInitialFormState) && ecoComparableFormState() !== ecoInitialFormState);
+}
+function normalizeDopplerWaveInput(target) {
+  if (!target || !['eWave', 'aWave'].includes(target.name)) return;
+  const parsed = Number(String(target.value || '').trim().replace(',', '.'));
+  if (Number.isFinite(parsed) && parsed > 10) target.value = fmtUpTo(parsed / 100, 2);
+}
+form.addEventListener('input', () => {
+  render();
+  updateNewReportButtonState();
+});
+form.addEventListener('change', event => {
+  normalizeDopplerWaveInput(event.target);
+  render();
+  updateNewReportButtonState();
+});
 form.elements.bidimensionalTitle.addEventListener('change', () => { el('#reportTitle').dataset.dirty = 'false'; });
 form.addEventListener('keydown', event => {
   if (event.key !== 'Enter' || event.target.matches('textarea, button')) return;
@@ -294,6 +377,7 @@ el('#clearButton').addEventListener('click', () => {
   el('#description').textContent = '';
   el('#conclusions').textContent = '';
   render();
+  updateNewReportButtonState();
   window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
 });
 el('#printButton').addEventListener('click', () => window.print());
@@ -553,6 +637,12 @@ function plainReportText() {
     return raw && raw !== '—' ? raw : '-';
   };
   const plainCalculated = (n, unit = '', decimals = 1) => n == null ? '-' : `${fmt(n, decimals)}${unit ? ` ${unit}` : ''}`;
+  const plainInputUpTo = (key, unit = '', decimals = 1) => {
+    const n = number(data, key);
+    if (n != null) return `${fmtUpTo(n, decimals)}${unit ? ` ${unit}` : ''}`;
+    const raw = String(data.get(key) || '').trim();
+    return raw && raw !== '—' ? raw : '-';
+  };
   const plainDopplerInput = (key, unit = '', decimals = 1) => isDoppler ? plainInput(key, unit, decimals) : '-';
   const plainDopplerCalculated = (n, unit = '', decimals = 1) => isDoppler ? plainCalculated(n, unit, decimals) : '-';
   const manual = (field, automatic) => String(manualMetricEdits[field] ?? automatic ?? '-').trim() || '-';
@@ -564,7 +654,7 @@ function plainReportText() {
     'VENTRÍCULO IZQUIERDO:': 'Ventrículo izquierdo:', 'VENTRÍCULO DERECHO:': 'Ventrículo derecho:',
     'AURÍCULA IZQUIERDA:': 'Aurícula izquierda:', 'AURÍCULA DERECHA:': 'Aurícula derecha:',
     'VÁLVULA MITRAL:': 'Válvula mitral:', 'VÁLVULA TRICÚSPIDE:': 'Válvula tricúspide:',
-    'VÁLVULA AÓRTICA:': 'Válvula aórtica:', 'RAÍZ AÓRTICA:': 'Raíz aórtica:'
+    'VÁLVULA AÓRTICA:': 'Válvula aórtica:', 'RAÍZ AÓRTICA:': 'Raíz aórtica:', 'PERICARDIO:': 'Pericardio:'
   };
   const descriptionLines = [];
   let activeDescription = null;
@@ -587,7 +677,7 @@ function plainReportText() {
     'MEDIDAS 2D:',
     paired('Diám. interno en diástole:', plainInput('lvDd', 'mm', 0), 'Diám. interno en sístole:', plainInput('lvDs', 'mm', 0)),
     paired('Fracción de acortamiento:', plainCalculated(c.shortening, '%', 0), 'Fracción de eyección:', plainInput('lvef', '%', 0)),
-    paired('SIV en diástole:', plainInput('ivsd', 'mm', 0), 'PP en diástole:', plainInput('pwd', 'mm', 0)),
+    paired('SIV en diástole:', plainInputUpTo('ivsd', 'mm', 1), 'PP en diástole:', plainInputUpTo('pwd', 'mm', 1)),
     paired('Índice de masa ventricular:', plainCalculated(c.mass, 'g/m²', 0), 'EPR:', plainCalculated(c.rwt, '', 2)),
     paired('Diám. de aurícula izq.:', plainInput('la', 'mm', 0), 'Área de aurícula izq.:', plainInput('laArea', 'cm²', 0)),
     paired('Ap. Valv Aórtica:', plainInput('apAo', 'mm', 0), 'Diám. de raíz de aorta:', plainInput('aorticRoot', 'mm', 0)),
@@ -607,7 +697,7 @@ function plainReportText() {
     }),
     '', 'CONCLUSIONES:',
     ...compactConclusions,
-    '', '', '\t\tDr. RODRIGUEZ CLAUS, ELISEO', '\t\tEsp. en Cardiología - MP 118.231'
+    '', '\t\t\tRODRIGUEZ CLAUS, ELISEO', '\t\t\tMédico Esp. en Cardiología - MP 118.231'
   ].join('\n')}`;
 }
 
@@ -725,4 +815,6 @@ form.elements.studyDate.value = [
   (`0${ecoToday.getMonth() + 1}`).slice(-2),
   (`0${ecoToday.getDate()}`).slice(-2)
 ].join('-');
+ecoInitialFormState = ecoComparableFormState();
+updateNewReportButtonState();
 render();

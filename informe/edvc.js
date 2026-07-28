@@ -353,8 +353,8 @@ function edvcPlainText() {
     ...conclusions,
     '',
     '',
-    '\t\tDr. RODRIGUEZ CLAUS, ELISEO',
-    '\t\tEsp. en Cardiología - MP 118.231'
+    '\t\tRODRIGUEZ CLAUS, ELISEO',
+    '\t\tMédico Esp. en Cardiología - MP 118.231'
   ].join('\n')}`;
 }
 

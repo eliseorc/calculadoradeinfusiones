@@ -40,6 +40,9 @@
 
 /* Acción principal de carga y cálculo aórtico en estilo neutro */
 .form-actions{display:flex;justify-content:center;padding:16px 0!important}
+.form-actions #clearButton{transition:background-color .18s ease,color .18s ease}
+.form-actions #clearButton.has-data{background:var(--accent);color:#fff}
+.form-actions #clearButton.has-data:hover{background:var(--accent-dark)}
 .stenosis-section{border:1px solid var(--line)!important}
 .stenosis-section h3{color:var(--ink)!important;background:#fff!important}
 .stenosis-fields label,.stenosis-fields .calc-field{background:#fff!important;color:var(--ink)!important}
