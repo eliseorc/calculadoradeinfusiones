@@ -100,6 +100,41 @@ function leftVentricleGeometry(sex, mass, rwt) {
   const remodeling = !severity && rwt != null && rwt >= 0.48;
   return { severity, pattern, remodeling };
 }
+function relaxationAssessment(data, c) {
+  if (data.get('doppler') !== 'Si') return null;
+  const automatic = c.eOverA == null ? '' : c.eOverA >= 1 ? 'Normal' : 'Prolongada';
+  const value = String(manualMetricEdits.relaxation ?? automatic).trim();
+  const normalized = value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  if (normalized.includes('seudonormal') || normalized.includes('pseudonormal')) {
+    return {
+      metric: 'Seudonormal',
+      description: 'Patrón diastólico de relajación seudonormal.',
+      conclusion: 'Disfunción diastólica tipo 2.'
+    };
+  }
+  if (normalized.includes('restrictiv')) {
+    return {
+      metric: 'Restrictivo',
+      description: 'Patrón diastólico restrictivo.',
+      conclusion: 'Disfunción diastólica tipo 3.'
+    };
+  }
+  if (normalized.includes('prolong')) {
+    return {
+      metric: 'Prolongada',
+      description: 'Patrón diastólico de relajación prolongada.',
+      conclusion: 'Disfunción diastólica tipo 1.'
+    };
+  }
+  if (normalized.includes('normal')) {
+    return {
+      metric: 'Normal',
+      description: 'Patrón diastólico de relajación normal.',
+      conclusion: ''
+    };
+  }
+  return value ? { metric: value, description: `Patrón diastólico de relajación ${value.toLowerCase()}.`, conclusion: '' } : null;
+}
 function autoDescriptions(data, c) {
   const sex = data.get('sex');
   const age = number(data, 'age');
@@ -132,7 +167,7 @@ function autoDescriptions(data, c) {
     }
   }
   const motion = goodWindow ? 'No se evidenciaron alteraciones de motilidad parietal en reposo.' : 'En reposo no impresiona presentar alteraciones de motilidad parietal (ventana acústica subóptima).';
-  const relaxation = !isDoppler || c.eOverA == null ? '' : c.eOverA >= 1 ? 'Patrón diastólico de relajación normal.' : 'Patrón diastólico de relajación prolongada.';
+  const relaxation = relaxationAssessment(data, c)?.description || '';
   const rv = number(data, 'rv'); const tapse = number(data, 'tapse'); const ivc = number(data, 'ivc');
   let right = 'Completar medidas del ventrículo derecho.';
   if (rv && tapse) {
@@ -247,7 +282,8 @@ function autoConclusions(data, c) {
       else conclusions.push('Aurícula izquierda severamente dilatada.');
     }
   } else {
-    if (c.eOverA != null && c.eOverA < 1) conclusions.push('Disfunción diastólica tipo 1.');
+    const relaxation = relaxationAssessment(data, c);
+    if (relaxation?.conclusion) conclusions.push(relaxation.conclusion);
     const degrees = ['trivial', 'leve', 'moderada', 'severa'];
     const valveGrades = [data.get('mr'), data.get('tr'), data.get('ar')].map(x => String(x || '').trim().toLowerCase());
     const significantValve = valveGrades.some(x => x === 'moderada' || x === 'severa');
@@ -288,6 +324,44 @@ function renderConclusions(data, c, force = false) {
   container.innerHTML = `<div class="conclusion-heading">C O N C L U S I O N E S</div>${autoConclusions(data, c).map(text => `<div class="conclusion-text editable" contenteditable="true">${escapeHtml(text)}</div>`).join('')}`;
   container.dataset.dirty = 'false';
 }
+function syncRelaxationNarrative(data, c) {
+  const assessment = relaxationAssessment(data, c);
+  const descriptionContainer = el('#description');
+  const conclusionsContainer = el('#conclusions');
+
+  if (descriptionContainer.dataset.dirty !== 'true') {
+    renderDescriptions(data, c);
+  } else {
+    const textNode = descriptionContainer.querySelector('.description-row .description-text');
+    if (textNode && assessment?.description) {
+      const current = editablePlainText(textNode);
+      const pattern = /Patrón diastólico(?: de relajación)? [^\n.]*\./i;
+      textNode.textContent = pattern.test(current)
+        ? current.replace(pattern, assessment.description)
+        : `${current}${current ? '\n' : ''}${assessment.description}`;
+    }
+  }
+
+  if (conclusionsContainer.dataset.dirty !== 'true') {
+    renderConclusions(data, c);
+  } else {
+    const rows = Array.from(conclusionsContainer.querySelectorAll('.conclusion-text'));
+    const diastolicRow = rows.find(row => /^Disfunción diastólica\b/i.test(editablePlainText(row)));
+    if (assessment?.conclusion) {
+      if (diastolicRow) diastolicRow.textContent = assessment.conclusion;
+      else {
+        const row = document.createElement('div');
+        row.className = 'conclusion-text editable';
+        row.contentEditable = 'true';
+        row.textContent = assessment.conclusion;
+        if (rows[0]) rows[0].insertAdjacentElement('afterend', row);
+        else conclusionsContainer.appendChild(row);
+      }
+    } else if (diastolicRow) {
+      diastolicRow.remove();
+    }
+  }
+}
 function automaticReportTitle(data) {
   return data.get('bidimensionalTitle') === 'on' || data.get('doppler') !== 'Si'
     ? 'ECOCARDIOGRAMA BIDIMENSIONAL'
@@ -317,7 +391,7 @@ function render() {
   const isDoppler = data.get('doppler') === 'Si';
   const dopplerValue = (key, unit = '', decimals = 1) => isDoppler ? val(key, unit, decimals) : '';
   const dopplerCalculated = (num, unit = '', decimals = 1) => isDoppler ? calculated(num, unit, decimals) : '';
-  const relaxation = !isDoppler || c.eOverA == null ? '' : c.eOverA >= 1 ? 'Normal' : 'Prolongada';
+  const relaxation = relaxationAssessment(data, c)?.metric || '';
   const pulmonaryHypertension = !isDoppler ? '' : c.psap == null || c.psap < 36 ? 'No' : 'Sí';
   el('#metrics').innerHTML = [
     measureHeading('M E D I D A S&nbsp;&nbsp; 2 D', c.asc ? `ASC: ${fmt(c.asc, 0)} m²` : ''),
@@ -342,7 +416,13 @@ function render() {
     measureRow('Gradiente medio aórtico:', dopplerValue('aorticMeanGradient','mmHg',0), '', 'Insuficiencia aórtica:', dopplerValue('ar'), ''),
     '</div>'
   ].join('');
-  el('#metrics').querySelectorAll('.inline-edit').forEach(node => node.addEventListener('input', () => { manualMetricEdits[node.dataset.field] = node.textContent.trim(); }));
+  el('#metrics').querySelectorAll('.inline-edit').forEach(node => node.addEventListener('input', () => {
+    manualMetricEdits[node.dataset.field] = node.textContent.trim();
+    if (node.dataset.field === 'relaxation') {
+      const currentData = new FormData(form);
+      syncRelaxationNarrative(currentData, calculate(currentData));
+    }
+  }));
   renderDescriptions(data, c);
   const lv = number(data,'lvef');
   renderConclusions(data, c);
