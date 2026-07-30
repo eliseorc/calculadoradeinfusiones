@@ -415,7 +415,11 @@ async function edvcGeneratePdf() {
   };
   const wrapped = (text, width, size = 9, style = 'normal') => {
     useFont(style, size);
-    return pdf.splitTextToSize(String(text || ''), width);
+    const lines = [];
+    String(text || '').split('\n').forEach(line => {
+      lines.push(...pdf.splitTextToSize(line || ' ', width));
+    });
+    return lines.length ? lines : [''];
   };
   const band = title => {
     pageBreak(7);
@@ -462,7 +466,7 @@ async function edvcGeneratePdf() {
     band(region.querySelector('.edvc-region-heading').textContent.trim());
     region.querySelectorAll('.edvc-report-row').forEach(row => {
       const label = row.querySelector('.edvc-report-label').textContent.trim();
-      const text = row.querySelector('.edvc-report-text').textContent.trim();
+      const text = editablePlainText(row.querySelector('.edvc-report-text'));
       const labelLines = wrapped(label, 43, 9, 'bold');
       const textLines = wrapped(text, 133, 9);
       const height = Math.max(labelLines.length, textLines.length) * 4.95 + 0.8;
@@ -478,7 +482,7 @@ async function edvcGeneratePdf() {
 
   band('C O N C L U S I O N E S');
   report.querySelectorAll('#edvcConclusions .conclusion-text').forEach(row => {
-    const lines = wrapped(row.textContent.trim(), contentWidth - 8, 9);
+    const lines = wrapped(editablePlainText(row), contentWidth - 8, 9);
     const height = lines.length * 4.2 + 0.6;
     if (pageBreak(height)) band('C O N C L U S I O N E S');
     useFont('normal', 9, dark);

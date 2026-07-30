@@ -43,6 +43,16 @@ function calculate(data) {
 }
 
 function escapeHtml(text) { return String(text ?? '—').replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[char]); }
+function editablePlainText(node) {
+  if (!node) return '';
+  const text = typeof node.innerText === 'string' ? node.innerText : node.textContent || '';
+  return text
+    .replace(/\r\n?/g, '\n')
+    .replace(/\u00a0/g, ' ')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n[ \t]+/g, '\n')
+    .trim();
+}
 function editableMetric(field, automaticValue) { return `<span class="editable inline-edit" contenteditable="true" data-field="${field}">${escapeHtml(manualMetricEdits[field] ?? automaticValue)}</span>`; }
 function reportValue(data, key, unit = '', decimals = 1) { const n = number(data, key); return n ? `${fmt(n, decimals)}${unit ? ` ${unit}` : ''}` : escapeHtml(data.get(key) || '—'); }
 function measureRow(leftLabel, leftValue, leftRef, rightLabel, rightValue, rightRef) {
@@ -581,7 +591,7 @@ async function generateSelectablePdf() {
   const descriptionRows = Array.from(el('#description').querySelectorAll('.description-row'));
   descriptionRows.forEach(row => {
     const label = row.querySelector('.description-label')?.textContent.trim() || '';
-    const text = row.querySelector('.description-text')?.textContent.trim() || '';
+    const text = editablePlainText(row.querySelector('.description-text'));
     const labelLines = wrapText(label, 43, 9, 'bold');
     const textLines = wrapText(text, 133, 9, 'normal');
     const rowHeight = Math.max(labelLines.length, textLines.length) * 4.15 + 0.7;
@@ -597,7 +607,7 @@ async function generateSelectablePdf() {
   addBand('C O N C L U S I O N E S');
   const conclusionRows = Array.from(el('#conclusions').querySelectorAll('.conclusion-text'));
   conclusionRows.forEach(row => {
-    const lines = wrapText(row.textContent.trim(), contentWidth - 8, 9, 'normal');
+    const lines = wrapText(editablePlainText(row), contentWidth - 8, 9, 'normal');
     const rowHeight = lines.length * 4.3 + 0.5;
     if (pageBreakIfNeeded(rowHeight)) addBand('C O N C L U S I O N E S');
     useFont('normal', 9, dark);
