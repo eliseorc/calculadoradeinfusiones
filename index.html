@@ -64,7 +64,7 @@
         <li><a href="#" onclick="showSection(19)">Lidocaína</a></li>
         <li><a href="#" onclick="showSection(11)">Midazolam</a></li>
         <li><a href="#" onclick="showSection(4)">Milrinona</a></li>
-        <li><a href="#" onclick="showSection(18)">Nitroprusiato de sodio</a></li>
+        <li><a href="#" onclick="showSection(18)">Nitrop. de sodio</a></li>
         <li><a href="#" onclick="showSection(1)">Noradrenalina</a></li>
         <li><a href="#" onclick="showSection(12)">Propofol</a></li>
         <li><a href="#" onclick="showSection(10)">Remifentanilo</a></li>
@@ -408,7 +408,12 @@
   <div class="presentation-dialog" id="presentation-dialog" role="dialog" aria-modal="true" aria-labelledby="presentation-dialog-title" hidden>
     <div class="presentation-dialog-card">
       <button class="access-dialog-close" type="button" aria-label="Cerrar" onclick="closePresentationDialog()">×</button>
-      <span class="presentation-dialog-icon" aria-hidden="true">⚙</span>
+      <span class="presentation-dialog-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M4 7h7M15 7h5M4 17h3M11 17h9M11 4v6M7 14v6"/>
+          <circle cx="13" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>
+        </svg>
+      </span>
       <h2 id="presentation-dialog-title">Presentación</h2>
       <p class="presentation-dialog-help">Modificá estos valores solo si la presentación disponible es diferente a la original.</p>
       <form onsubmit="savePresentation(event)">

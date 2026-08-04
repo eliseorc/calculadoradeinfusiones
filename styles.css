@@ -1,17 +1,22 @@
+:root {
+  --top-bar-height: calc(88px + env(safe-area-inset-top));
+}
+
 body::before {
     content: "";
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 120px;
+    height: var(--top-bar-height);
 
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     background: linear-gradient(
         to bottom,
-        rgba(255,255,255,.85),
-        rgba(255,255,255,.45),
+        rgba(255,255,255,1) 0%,
+        rgba(255,255,255,.98) 42%,
+        rgba(255,255,255,.72) 68%,
         rgba(255,255,255,0)
     );
 
@@ -23,11 +28,22 @@ body::before {
     body::before {
         background: linear-gradient(
             to bottom,
-            rgba(28,28,30,.90),
-            rgba(28,28,30,.55),
+            rgba(28,28,30,1) 0%,
+            rgba(28,28,30,.98) 42%,
+            rgba(28,28,30,.74) 68%,
             rgba(28,28,30,0)
         );
     }
+}
+
+html.app-mode {
+  --top-bar-height: 120px;
+}
+
+@media (display-mode: standalone) {
+  :root {
+    --top-bar-height: 120px;
+  }
 }
 
 .lang-switch {
@@ -238,16 +254,21 @@ a:hover {
 }
 
 .hamburger {
-  position: relative;
-  margin: 0 auto;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin: 0;
   background-color: transparent;
-  top: 35pt;
-  height: 30px;
+  height: var(--top-bar-height);
   width: 35px;
   cursor: pointer;
   z-index: 10001;
   user-select: none;
-  transition: transform 0.25s cubic-bezier(0.05, 1.04, 0.72, 0.98);
+  transform: translateX(-50%);
+  transition: opacity 0.25s ease;
 }
 
 ._layer {
@@ -256,7 +277,7 @@ a:hover {
   border-radius: 5px;
   width: 35px;
   height: 4px;
-  margin: 6px auto;
+  margin: 3px auto;
   transition: all 0.25s cubic-bezier(0.05, 1.04, 0.72, 0.98),
               background-color 0.25s ease;
 }
@@ -309,7 +330,7 @@ a:hover {
 
 .sidebar ul {
   margin: 0;
-  padding: 125px 0 calc(28px + env(safe-area-inset-bottom));
+  padding: var(--top-bar-height) 0 calc(28px + env(safe-area-inset-bottom));
 }
 
 .sidebar ul li {
@@ -328,6 +349,7 @@ a:hover {
 .sidebar ul li a {
   color: var(--accent-color);
 }
+
 .sidebar ul li a:hover {
   color: var(--text-color);
 }
@@ -472,8 +494,19 @@ h3 {
   border: 0;
   background: transparent;
   color: var(--accent-color);
-  font-size: 1rem;
   line-height: 1;
+}
+
+.presentation-edit svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  margin: auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
 }
 
 .presentation-edit:hover,
@@ -840,8 +873,20 @@ h8 {
 }
 
 .presentation-dialog-icon {
-  display: block;
-  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color);
+}
+
+.presentation-dialog-icon svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
 }
 
 .presentation-dialog-help {
@@ -913,7 +958,7 @@ h8 {
   }
 
   .hamburger {
-    margin: 0 auto;
+    margin: 0;
   }
 }
 

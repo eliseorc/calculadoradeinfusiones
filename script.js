@@ -70,6 +70,9 @@ const DRUG_PRESENTATIONS = Object.freeze({
 
 const PRESENTATION_STORAGE_KEY = 'infusion-drug-presentations-v1';
 let activePresentationSection = null;
+const ADJUSTMENTS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+  '<path d="M4 7h7M15 7h5M4 17h3M11 17h9M11 4v6M7 14v6"/>' +
+  '<circle cx="13" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>';
 
 function readPresentationOverrides() {
   try {
@@ -133,7 +136,7 @@ function initializePresentationEditors() {
     const button = document.createElement('button');
     button.className = 'presentation-edit';
     button.type = 'button';
-    button.textContent = '⚙';
+    button.innerHTML = ADJUSTMENTS_ICON;
     button.setAttribute('aria-label', 'Editar presentación de ' + DRUG_PRESENTATIONS[sectionIndex].name);
     button.addEventListener('click', function () {
       openPresentationDialog(sectionIndex);
@@ -1166,6 +1169,11 @@ let pendingInstallMode = null;
 function isNativeContainer() {
   return window.Capacitor?.isNativePlatform?.() === true ||
     /^(capacitor|ionic):$/.test(window.location.protocol);
+}
+
+if (isNativeContainer() || window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true) {
+  document.documentElement.classList.add('app-mode');
 }
 
 function isAppInstalled() {
