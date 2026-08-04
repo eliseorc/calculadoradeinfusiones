@@ -3,13 +3,17 @@
   <head>
   <title>Calculadora de infusiones</title>
   <link rel="stylesheet" type="text/css" href="styles.css">
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="manifest.json">
   <link href='https://fonts.googleapis.com/css?family=Lato:300,400,700,400italic' rel='stylesheet' type='text/css'>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Calculadora online de infusiones para UTI, UCIC, UCO o guardia. Convierte ml/h de noradrenalina, dopamina, vasopresina, milrinona, dobutamina, fentanilo, midazolam y otros fármacos a dosis administrada de forma rápida y segura.">
+<meta  name="viewport"  content="width=device-width, initial-scale=1.0, viewport-fit=cover">  
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Infusiones">
+<meta name="description" content="Calculadora online de infusiones para UTI, UCIC, UCO o guardia. Convierte ml/h de noradrenalina, dopamina, vasopresina, milrinona, dobutamina, fentanilo, midazolam y otros fármacos a dosis administrada de forma rápida y segura.">
   <meta name="color-scheme" content="light dark">
-	<link rel="icon" href="/favicon.png" type="image/png">
+	<link rel="icon" href="favicon.png" type="image/png">
+	<link rel="apple-touch-icon" href="infusion192x192.png">
 	<link id="canonical" rel="canonical" href="">
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-7K6PJTCZN0"></script>
@@ -24,7 +28,7 @@
     .container {
       max-width: 100%;
       margin: 0 auto;
-      padding: 0 20px; 
+      padding: 24px 20px; 
     }
     @media (max-width: 375px) { 
       .container {
@@ -36,31 +40,28 @@
      crossorigin="anonymous"></script>
 </head>
 <body>
-  <h1 class="sr-only">Calculadora de infusiones para UTI, UCIC, UCO y guardia: calcula dosis de Adrenalina, Atracurio, Dobutamina, Dopamina, Dexmedetomidina, Furosemida, Fentanilo, Insulina, Isoproterenol, Labetalol, Midazolam, Milrinona, Nitroprusiato de sodio, Noradrenalina, Propofol, Remifentanilo, Vasopresina.</h1>
-  
+  <h1 class="sr-only">Calculadora de infusiones para UTI, UCIC, UCO y guardia: calcula dosis de Adrenalina, Atracurio, Dobutamina, Dopamina, Dexmedetomidina, Furosemida, Fentanilo, Insulina, Isoproterenol, Labetalol, Lidocaína, Midazolam, Milrinona, Nitroprusiato de sodio, Noradrenalina, Propofol, Remifentanilo, Vasopresina.</h1>
+
   <div class="container">
    <div class="hamburger">
       <div class="_layer -top"></div>
       <div class="_layer -mid"></div>
       <div class="_layer -bottom"></div>
     </div>
-<div class="lang-switch">
-  <a href="/" id="lang-es">ES</a>
-  <span>|</span>
-  <a href="/en/" id="lang-en">EN</a>
-</div>
-    <nav class="sidebar">
+
+    <nav class="sidebar" aria-label="Medicamentos disponibles">
       <ul>
         <li><a href="#" onclick="showSection(5)">Adrenalina</a></li>
         <li><a href="#" onclick="showSection(16)">Atracurio</a></li>
         <li><a href="#" onclick="showSection(3)">Dobutamina</a></li>
         <li><a href="#" onclick="showSection(2)">Dopamina</a></li>
         <li><a href="#" onclick="showSection(13)">Dexmedetomidina</a></li>
-        <li><a href="#" onclick="showSection(8)">Furosemida</a></li>
         <li><a href="#" onclick="showSection(9)">Fentanilo</a></li>
+        <li><a href="#" onclick="showSection(8)">Furosemida</a></li>
         <li><a href="#" onclick="showSection(15)">Insulina</a></li>
         <li><a href="#" onclick="showSection(7)">Isoproterenol</a></li>
         <li><a href="#" onclick="showSection(17)">Labetalol</a></li>
+        <li><a href="#" onclick="showSection(19)">Lidocaína</a></li>
         <li><a href="#" onclick="showSection(11)">Midazolam</a></li>
         <li><a href="#" onclick="showSection(4)">Milrinona</a></li>
         <li><a href="#" onclick="showSection(18)">Nitroprusiato de sodio</a></li>
@@ -80,7 +81,7 @@
           <br>
           <label for="a35">Cant. de ampollas:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a35" required><br>
-          <label for="b35">Ml. de solucion:</label>
+          <label for="b35">Ml. de solución:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b35" required><br>
           <label for="c35">Peso (kg):</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c35" required><br>
@@ -97,7 +98,7 @@
           <br>
           <label for="a43">Cant. de ampollas:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a43" required><br>
-          <label for="b43">Ml. de solucion:</label>
+          <label for="b43">Ml. de solución:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b43" required><br>
           <label for="c43">Peso (kg):</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c43" required><br>
@@ -114,7 +115,7 @@
           <br>
           <label for="a39">Cant. de ampollas:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a39" required><br>
-          <label for="b39">Ml. de solucion:</label>
+          <label for="b39">Ml. de solución:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b39" required><br>
           <label for="c39">Peso (kg):</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c39" required><br>
@@ -131,7 +132,7 @@
         <form onsubmit="calculateMilrinona(event)">
           <label for="a47">Cant. de ampollas:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a47" required><br>
-          <label for="b47">Ml. de solucion:</label>
+          <label for="b47">Ml. de solución:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b47" required><br>
           <label for="c47">Peso (kg):</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c47" required><br>
@@ -148,7 +149,7 @@
           <br>
           <label for="a72">Cant. de ampollas:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a72" required><br>
-          <label for="b72">Ml. de solucion:</label>
+          <label for="b72">Ml. de solución:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b72" required><br>
           <label for="c72">Peso (kg):</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c72" required><br>
@@ -165,7 +166,7 @@
         <form onsubmit="calculateVasopresina(event)">
           <label for="a51">Cant. de ampollas:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a51" required><br>
-          <label for="b51">Ml. de solucion:</label>
+          <label for="b51">Ml. de solución:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b51" required><br>
           <label for="c51">ml/h:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c51" required><br><br>
@@ -180,7 +181,7 @@
         <form onsubmit="calculateIsoproterenol(event)">
           <label for="a56">Cant. de ampollas:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a56" required><br>
-          <label for="b56">Ml. de solucion:</label>
+          <label for="b56">Ml. de solución:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b56" required><br>
           <label for="c56">ml/h:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c56" required><br><br>
@@ -195,7 +196,7 @@
           <br>
           <label for="a29">Cant. de ampollas:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a29" required><br>
-          <label for="b29">ml. de solucion:</label>
+          <label for="b29">Ml. de solución:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b29" required><br>
           <label for="c29">Peso (kg):</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c29" required><br>
@@ -212,7 +213,7 @@
         <form onsubmit="calculateFentanilo(event)">
           <label for="a3">Cant. de ampollas:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a3" required><br>
-          <label for="b3">Ml. de solucion:</label>
+          <label for="b3">Ml. de solución:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b3" required><br>
           <label for="c3">Peso (kg):</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c3" required><br>
@@ -229,7 +230,7 @@
         <form onsubmit="calculateRemifentanilo(event)">
           <label for="a11">Cant. de ampollas:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a11" required><br>
-          <label for="b11">Ml. de solucion:</label>
+          <label for="b11">Ml. de solución:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b11" required><br>
           <label for="c11">Peso (kg):</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c11" required><br>
@@ -242,11 +243,11 @@
       <div id="section11" class="section">
         <h2>Midazolam</h2>
 		  <h3>1 amp = 15 mg/3ml</h3>
-		  <h4>Dosis: 0,02 - 0,2 mcg/kg/h</h4>
+		  <h4>Dosis: 0,02 - 0,2 mg/kg/h</h4>
         <form onsubmit="calculateMidazolam(event)">
           <label for="a7">Cant. de ampollas:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a7" required><br>
-          <label for="b7">Ml. de solucion:</label>
+          <label for="b7">Ml. de solución:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b7" required><br>
           <label for="c7">Peso (kg):</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c7" required><br>
@@ -259,7 +260,7 @@
       <div id="section12" class="section">
         <h2>Propofol</h2>
 		  <h3>1 amp = 200 mg/20 ml</h3>
-		  <h4>En baxter vacio. Dosis: 0,3 - 3 mcg/kg/h</h4>
+		  <h4>En baxter vacío. Dosis: 0,3 - 3 mg/kg/h</h4>
         <form onsubmit="calculatePropofol(event)">
           <label for="a15">Cant. de ampollas:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a15" required><br>
@@ -278,7 +279,7 @@
         <form onsubmit="calculateDexmedetomidina(event)">
           <label for="a23">Cant. de ampollas:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a23" required><br>
-          <label for="b23">Ml. de solucion:</label>
+          <label for="b23">Ml. de solución:</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b23" required><br>
           <label for="c23">Peso (kg):</label>
           <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="c23" required><br>
@@ -303,7 +304,7 @@
      onclick="gtag('event', 'click_instagram', { lugar: 'footer' });">
     Instagram: @eliseo.rc
   </a><br>      <a href="https://www.flaticon.com/free-icons/infusion" title="infusion icons">Infusion icons created by Freepik - Flaticon</a></h6>
-                <br> <a href="/privacy.html">Política de privacidad</a>
+                <br> <a href="https://calculadoradeinfusiones.com.ar/privacy.html">Política de privacidad</a>
       </div>
 
       <div id="section15" class="section">
@@ -327,7 +328,7 @@
           - Controles <b>horarios</b> hasta valores estables entre 100-150 mg/dl por >4 hs, luego cada 2 hs.<br>
           - Alcanzada glucemia menor a 200 mg/dl iniciar goteo de Dextrosa 5% </br>
           - Tratamiento de hipoglucemia: hipertonico glucosado 25% 1 amp c/ 15 min. hasta glucemia >60  mg/dl<br>
-          - Basado en la <a href="tabla.pdf">tabla de insulina</a>         
+          - Basado en la <a href="https://calculadoradeinfusiones.com.ar/tabla.pdf">tabla de insulina</a>         
         </div>
 
       </div>
@@ -354,7 +355,7 @@
 <div id="section17" class="section">
   <h2>Labetalol</h2>
   <h3>1 amp = 20 mg</h3>
-  <h4>Dosis: 0,5 - 2 mcg/min</h4>
+  <h4>Dosis: 0,5 - 2 mg/min</h4>
   <form onsubmit="calculateLabetalol(event)">
     <label for="a17">Cant. de ampollas:</label>
     <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a17" required><br>
@@ -384,9 +385,53 @@
     <p id="result18"></p>
   </form>
 </div>
+
+<div id="section19" class="section">
+  <h2>Lidocaína</h2>
+  <h3>1 amp = 100 mg / 5 ml (2%)</h3>
+  <h4>Dosis: 1 - 4 mg/min</h4>
+  <form onsubmit="calculateLidocaina(event)">
+    <label for="a19">Cant. de ampollas:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="a19" required><br>
+    <label for="b19">Volumen final:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="b19" required><br>
+    <label for="d19">ml/h:</label>
+    <input type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" id="d19" required><br><br>
+    <button type="submit">Calcular dosis</button>
+    <p id="result19"></p>
+  </form>
+</div>
     </div>
    
   </div></div>
+
+  <div class="presentation-dialog" id="presentation-dialog" role="dialog" aria-modal="true" aria-labelledby="presentation-dialog-title" hidden>
+    <div class="presentation-dialog-card">
+      <button class="access-dialog-close" type="button" aria-label="Cerrar" onclick="closePresentationDialog()">×</button>
+      <span class="presentation-dialog-icon" aria-hidden="true">⚙</span>
+      <h2 id="presentation-dialog-title">Presentación</h2>
+      <p class="presentation-dialog-help">Modificá estos valores solo si la presentación disponible es diferente a la original.</p>
+      <form onsubmit="savePresentation(event)">
+        <label for="presentation-amount">Cantidad de droga por ampolla</label>
+        <div class="presentation-input-row">
+          <input id="presentation-amount" type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?" required>
+          <span id="presentation-amount-unit"></span>
+        </div>
+        <div id="presentation-volume-field">
+          <label for="presentation-volume">Volumen por ampolla</label>
+          <div class="presentation-input-row">
+            <input id="presentation-volume" type="text" inputmode="decimal" pattern="[0-9]+([.,][0-9]+)?">
+            <span id="presentation-volume-unit"></span>
+          </div>
+        </div>
+        <p class="presentation-dialog-error" id="presentation-dialog-error" role="alert"></p>
+        <div class="presentation-dialog-actions">
+          <button class="presentation-reset" type="button" onclick="resetPresentation()">Restaurar original</button>
+          <button type="submit">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
   <script src="script.js"></script>
 	<script>
   const canonical = document.getElementById("canonical");

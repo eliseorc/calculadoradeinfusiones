@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Acceso | Calculadora de infusiones</title>
+  <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="infusion192x192.png">
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="auth-page">
+  <main class="auth-shell">
+    <a class="auth-back" href="index.html" aria-label="Volver a la calculadora">← Volver</a>
+
+    <section class="auth-card" aria-labelledby="auth-title">
+      <img class="auth-logo" src="infusion128x128.png" alt="">
+      <h1 id="auth-title">Bienvenido</h1>
+      <p class="auth-intro">Accedé a todas las calculadoras de infusiones desde una sola cuenta.</p>
+
+      <div class="auth-tabs" role="tablist" aria-label="Opciones de acceso">
+        <button class="auth-tab" id="login-tab" type="button" role="tab" aria-controls="login-panel" onclick="selectAuthMode('ingresar')">Iniciar sesión</button>
+        <button class="auth-tab" id="register-tab" type="button" role="tab" aria-controls="register-panel" onclick="selectAuthMode('registro')">Crear cuenta</button>
+      </div>
+
+      <form class="auth-form" id="login-panel" data-auth-form="login">
+        <label for="login-email">Correo electrónico</label>
+        <input id="login-email" name="email" type="email" autocomplete="email" required>
+        <label for="login-password">Contraseña</label>
+        <input id="login-password" name="password" type="password" autocomplete="current-password" minlength="8" required>
+        <button type="submit">Iniciar sesión</button>
+        <button class="auth-help auth-help-button" type="button" onclick="selectAuthMode('recuperar')">Olvidé mi contraseña</button>
+      </form>
+
+      <form class="auth-form" id="reset-panel" data-auth-form="reset" hidden>
+        <p class="auth-reset-copy">Ingresá tu correo y te enviaremos un enlace para recuperar el acceso.</p>
+        <label for="reset-email">Correo electrónico</label>
+        <input id="reset-email" name="email" type="email" autocomplete="email" required>
+        <button type="submit">Enviar enlace</button>
+        <button class="auth-help auth-help-button" type="button" onclick="selectAuthMode('ingresar')">Volver a iniciar sesión</button>
+      </form>
+
+      <form class="auth-form" id="register-panel" data-auth-form="register" hidden>
+        <label for="register-email">Correo electrónico</label>
+        <input id="register-email" name="email" type="email" autocomplete="email" required>
+        <label for="register-password">Crear contraseña</label>
+        <input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8" required>
+        <button type="submit">Crear cuenta</button>
+        <p class="auth-legal">Al registrarte aceptás la <a href="privacy.html">Política de privacidad</a>.</p>
+      </form>
+
+      <p class="auth-status" id="auth-status" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script>
+    function selectAuthMode(mode) {
+      const isRegister = mode === 'registro';
+      const isReset = mode === 'recuperar';
+      const loginPanel = document.getElementById('login-panel');
+      const registerPanel = document.getElementById('register-panel');
+      const resetPanel = document.getElementById('reset-panel');
+      const loginTab = document.getElementById('login-tab');
+      const registerTab = document.getElementById('register-tab');
+
+      loginPanel.hidden = isRegister || isReset;
+      registerPanel.hidden = !isRegister;
+      resetPanel.hidden = !isReset;
+      loginTab.classList.toggle('is-active', !isRegister && !isReset);
+      registerTab.classList.toggle('is-active', isRegister);
+      loginTab.setAttribute('aria-selected', String(!isRegister && !isReset));
+      registerTab.setAttribute('aria-selected', String(isRegister));
+    }
+
+    const initialMode = new URLSearchParams(window.location.search).get('modo');
+    selectAuthMode(initialMode === 'registro' ? 'registro' : 'ingresar');
+
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

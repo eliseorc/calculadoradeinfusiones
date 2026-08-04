@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Mi cuenta | Calculadora de infusiones</title>
+  <link rel="icon" href="favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="infusion192x192.png">
+  <link href="https://fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet" type="text/css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="account-page">
+  <main class="account-shell">
+    <a class="auth-back" href="index.html">← Volver a la calculadora</a>
+
+    <header class="account-page-header">
+      <img class="account-page-logo" src="infusion128x128.png" alt="">
+      <div>
+        <p class="account-page-eyebrow">CUENTA</p>
+        <h1>Mi cuenta</h1>
+        <p id="account-page-email">Cargando…</p>
+      </div>
+    </header>
+
+    <section class="subscription-card" id="subscription-card" aria-labelledby="subscription-title" aria-busy="true">
+      <div class="subscription-card-heading">
+        <div>
+          <p class="account-page-eyebrow">SUSCRIPCIÓN</p>
+          <h2 id="subscription-title">Tu plan</h2>
+        </div>
+        <span class="subscription-status" id="subscription-status">Consultando…</span>
+      </div>
+
+      <dl class="subscription-details">
+        <div>
+          <dt>Plan actual</dt>
+          <dd id="subscription-plan">—</dd>
+        </div>
+        <div>
+          <dt>Próxima renovación</dt>
+          <dd id="subscription-renewal">—</dd>
+        </div>
+      </dl>
+
+      <div class="subscription-action" id="free-plan-action" hidden>
+        <p>Pasá al plan Premium para acceder a todas las calculadoras.</p>
+        <button type="button" disabled>Suscribirme próximamente</button>
+        <small>Se habilitará cuando Lemon Squeezy apruebe la tienda.</small>
+      </div>
+
+      <div class="subscription-action" id="paid-plan-action" hidden>
+        <p>Desde el portal seguro podrás actualizar el pago, ver recibos o cancelar.</p>
+        <button type="button" disabled>Administrar suscripción</button>
+        <small>El portal se conectará al completar la integración con Lemon Squeezy.</small>
+      </div>
+
+      <p class="early-access-note" id="early-access-note" hidden>
+        Durante esta etapa de configuración, tu cuenta tiene acceso anticipado a todas las calculadoras.
+      </p>
+
+      <p class="account-load-error" id="account-load-error" role="status"></p>
+    </section>
+
+    <section class="account-security-card">
+      <div>
+        <h2>Seguridad</h2>
+        <p>La sesión y tus datos de cuenta están administrados por Supabase.</p>
+      </div>
+      <button class="account-signout" id="account-page-signout" type="button">Cerrar sesión</button>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/account.js"></script>
+</body>
+</html>
