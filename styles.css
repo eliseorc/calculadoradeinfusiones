@@ -579,7 +579,7 @@ h8 {
 
 .content {
   flex-grow: 1;
-  padding-top: 15%;
+  padding-top: calc(var(--top-bar-height) + 16px);
   padding-bottom: calc(28px + env(safe-area-inset-bottom));
   margin: 0 auto;
   line-height: 33px;
