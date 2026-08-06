@@ -1,6 +1,7 @@
 :root {
   --top-controls-height: 64px;
   --top-bar-height: calc(var(--top-controls-height) + env(safe-area-inset-top));
+  --top-bar-cover-height: calc(var(--top-bar-height) + 22px);
 }
 
 body::before {
@@ -9,15 +10,15 @@ body::before {
     top: 0;
     left: 0;
     width: 100%;
-    height: var(--top-bar-height);
+    height: var(--top-bar-cover-height);
 
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     background: linear-gradient(
         to bottom,
         rgba(255,255,255,1) 0%,
-        rgba(255,255,255,.98) 42%,
-        rgba(255,255,255,.72) 68%,
+        rgba(255,255,255,1) 84%,
+        rgba(255,255,255,.92) 90%,
         rgba(255,255,255,0)
     );
 
@@ -30,8 +31,8 @@ body::before {
         background: linear-gradient(
             to bottom,
             rgba(0,0,0,1) 0%,
-            rgba(0,0,0,1) 58%,
-            rgba(0,0,0,.92) 76%,
+            rgba(0,0,0,1) 84%,
+            rgba(0,0,0,.92) 90%,
             rgba(0,0,0,0) 100%
         );
     }
@@ -340,6 +341,12 @@ a:hover {
   background: #7bb3ff;
 }
 
+/* En pantallas táctiles el estado hover puede quedar retenido: la X conserva su color. */
+.hamburger:hover ._layer,
+.hamburger:active ._layer {
+  background: var(--accent-color);
+}
+
 /* Estado activo: forma la X perfectamente centrada */
 .hamburger.is-active ._layer.-top {
   transform: rotate(45deg);
@@ -640,7 +647,7 @@ a:hover {
   border-radius: 50%;
   background: transparent;
   color: #e0a20b;
-  font-size: 1.05rem;
+  font-size: 1.2rem;
   line-height: 1;
   transform: translateY(-50%);
 }
@@ -699,7 +706,7 @@ a:hover {
 
 .section-favorite-toggle span {
   color: color-mix(in srgb, var(--muted-text) 62%, transparent);
-  font-size: 1rem;
+  font-size: 1.15rem;
   line-height: 1;
 }
 
@@ -1127,9 +1134,9 @@ h8 {
   display: grid;
   place-items: center;
   padding: 12px;
-  background: rgba(8, 18, 30, 0.46);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: color-mix(in srgb, var(--bg-color) 94%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .presentation-dialog-card {
@@ -1402,7 +1409,7 @@ h8 {
   display: flex;
   align-items: center;
   gap: 3px;
-  width: 72px;
+  width: 80px;
   min-height: 34px;
 }
 
@@ -1425,8 +1432,8 @@ h8 {
 }
 
 .rate-stepper > .rate-stepper-button.is-adjustment {
-  flex-basis: 24px;
-  width: 24px;
+  flex-basis: 28px;
+  width: 28px;
 }
 
 .rate-stepper > .rate-stepper-button:hover,
@@ -2354,8 +2361,8 @@ html[data-theme="dark"] body::before {
   background: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 1) 58%,
-    rgba(0, 0, 0, 0.92) 76%,
+    rgba(0, 0, 0, 1) 84%,
+    rgba(0, 0, 0, 0.92) 90%,
     rgba(0, 0, 0, 0) 100%
   );
 }
@@ -2394,4 +2401,26 @@ html[data-theme="dark"] .subscription-status[data-status="past_due"] {
   border-color: #c45d67;
   background: #461d24;
   color: #ffc1c7;
+}
+
+/* En el listado, la cobertura termina donde empiezan los medicamentos. */
+body:has(.sidebar.is_active)::before {
+  height: var(--top-bar-height);
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 1) 82%,
+    rgba(255, 255, 255, 0.92) 90%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+html[data-theme="dark"] body:has(.sidebar.is_active)::before {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 82%,
+    rgba(0, 0, 0, 0.92) 90%,
+    rgba(0, 0, 0, 0) 100%
+  );
 }

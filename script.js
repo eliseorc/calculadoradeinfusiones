@@ -586,8 +586,19 @@ function clearRecentInputValuesForSection(sectionIndex) {
   }
 }
 
+var medicationNavigationReady = false;
+
+function openMedicationMenuFromHistory() {
+  closeDrugSearch();
+  var btn = document.querySelector('.hamburger');
+  var sidebar = document.querySelector('.sidebar');
+  if (btn) btn.classList.add('is-active');
+  if (sidebar) sidebar.classList.add('is_active');
+}
+
 // Mostrar secciones
-function showSection(sectionIndex) {
+function showSection(sectionIndex, navigationOptions) {
+  navigationOptions = navigationOptions || {};
   var sections = document.getElementsByClassName('section');
   for (var i = 0; i < sections.length; i++) {
     sections[i].classList.remove('show');
@@ -595,7 +606,39 @@ function showSection(sectionIndex) {
   var sectionId = 'section' + sectionIndex;
   var section = document.getElementById(sectionId);
   if (section) section.classList.add('show');
+
+  if (section && medicationNavigationReady && !navigationOptions.fromHistory) {
+    window.history.pushState(
+      { infusionView: 'section', sectionIndex: Number(sectionIndex) },
+      '',
+      '#medicamento-' + sectionIndex
+    );
+  }
 }
+
+function initializeMedicationNavigation() {
+  window.history.replaceState(
+    { infusionView: 'menu' },
+    '',
+    window.location.pathname + window.location.search
+  );
+  medicationNavigationReady = true;
+
+  window.addEventListener('popstate', function (event) {
+    var state = event.state || { infusionView: 'menu' };
+    if (state.infusionView === 'section' && Number.isInteger(Number(state.sectionIndex))) {
+      showSection(Number(state.sectionIndex), { fromHistory: true });
+      var btn = document.querySelector('.hamburger');
+      var sidebar = document.querySelector('.sidebar');
+      if (btn) btn.classList.remove('is-active');
+      if (sidebar) sidebar.classList.remove('is_active');
+      return;
+    }
+    openMedicationMenuFromHistory();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initializeMedicationNavigation);
 
 /* ======================
    MEDICAMENTOS FAVORITOS
@@ -1394,32 +1437,71 @@ function evaluarTratamiento() {
    ====================== */
 
 var themeToggle = null;
+var themePreference = 'system';
+var systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+function resolveTheme() {
+  return themePreference === 'dark' || themePreference === 'light'
+    ? themePreference
+    : (systemThemeQuery.matches ? 'dark' : 'light');
+}
+
+function applyResolvedTheme() {
+  document.documentElement.dataset.theme = resolveTheme();
+  updateThemeToggle();
+}
 
 function updateThemeToggle() {
   if (!themeToggle) return;
   var isDark = document.documentElement.dataset.theme === 'dark';
   var isEnglish = document.documentElement.lang.toLowerCase().indexOf('en') === 0;
-  var label = isEnglish
-    ? (isDark ? 'Switch to light mode' : 'Switch to dark mode')
-    : (isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+  var label = themePreference !== 'system'
+    ? (isEnglish ? 'Return to automatic theme' : 'Volver al modo automático')
+    : (isEnglish
+      ? (isDark ? 'Switch to light mode' : 'Switch to dark mode')
+      : (isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'));
   themeToggle.setAttribute('aria-label', label);
   themeToggle.setAttribute('title', label);
   themeToggle.setAttribute('aria-pressed', String(isDark));
 }
 
 function initializeThemeToggle() {
+  try {
+    var savedTheme = localStorage.getItem('infusion-theme');
+    themePreference = savedTheme === 'dark' || savedTheme === 'light' ? savedTheme : 'system';
+  } catch (error) {
+    themePreference = 'system';
+  }
+
   themeToggle = document.createElement('button');
   themeToggle.type = 'button';
   themeToggle.className = 'theme-toggle';
   themeToggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
   document.body.appendChild(themeToggle);
-  updateThemeToggle();
+  applyResolvedTheme();
+
+  var followSystemTheme = function () {
+    if (themePreference === 'system') applyResolvedTheme();
+  };
+  if (typeof systemThemeQuery.addEventListener === 'function') {
+    systemThemeQuery.addEventListener('change', followSystemTheme);
+  } else if (typeof systemThemeQuery.addListener === 'function') {
+    systemThemeQuery.addListener(followSystemTheme);
+  }
 
   themeToggle.addEventListener('click', function () {
-    var nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-    document.documentElement.dataset.theme = nextTheme;
+    var nextTheme;
+    if (themePreference === 'system') {
+      nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      themePreference = nextTheme;
+    } else {
+      themePreference = 'system';
+      nextTheme = resolveTheme();
+    }
+    applyResolvedTheme();
     try {
-      localStorage.setItem('infusion-theme', nextTheme);
+      if (themePreference === 'system') localStorage.removeItem('infusion-theme');
+      else localStorage.setItem('infusion-theme', themePreference);
     } catch (error) {
       // El cambio sigue funcionando aunque el navegador bloquee el almacenamiento.
     }
@@ -1657,11 +1739,11 @@ function createInstallExperience() {
   const banner = document.createElement('aside');
   banner.className = 'pwa-install-banner';
   banner.id = 'pwa-install-banner';
-  banner.setAttribute('aria-label', isEnglish ? 'Install application' : 'Instalar aplicación');
+  banner.setAttribute('aria-label', isEnglish ? 'Install Infusion Calculator' : 'Instalar Calculadora de infusiones');
   banner.hidden = true;
   banner.innerHTML =
     '<img src="' + (isEnglish ? '../' : '') + 'infusion128x128.png" alt="">' +
-    '<div class="pwa-install-copy"><strong>' + (isEnglish ? 'Install the app' : 'Instalar la app') + '</strong>' +
+    '<div class="pwa-install-copy"><strong>' + (isEnglish ? 'Install Infusion Calculator' : 'Instalar Calculadora de infusiones') + '</strong>' +
     '<span id="pwa-install-message"></span></div>' +
     '<button class="pwa-install-action" id="pwa-install-action" type="button"></button>' +
     '<button class="pwa-install-dismiss" id="pwa-install-dismiss" type="button" aria-label="' +
@@ -1679,7 +1761,7 @@ function createInstallExperience() {
     '<button class="access-dialog-close" id="install-dialog-close" type="button" aria-label="' +
     (isEnglish ? 'Close' : 'Cerrar') + '">×</button>' +
     '<img src="' + (isEnglish ? '../' : '') + 'infusion128x128.png" alt="">' +
-    '<h2 id="install-dialog-title">' + (isEnglish ? 'Install the app' : 'Instalar la app') + '</h2>' +
+    '<h2 id="install-dialog-title">' + (isEnglish ? 'Install Infusion Calculator' : 'Instalar Calculadora de infusiones') + '</h2>' +
     '<div id="install-dialog-instructions"></div>' +
     '<button class="install-dialog-done" id="install-dialog-done" type="button">' +
     (isEnglish ? 'Got it' : 'Entendido') + '</button></div>';
