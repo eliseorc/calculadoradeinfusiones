@@ -1,3 +1,17 @@
+/* Evita zoom accidental por pellizco o doble toque en iOS/Android. */
+(function lockPageZoom() {
+  const preventZoom = function (event) {
+    event.preventDefault();
+  };
+
+  document.addEventListener('gesturestart', preventZoom, { passive: false });
+  document.addEventListener('gesturechange', preventZoom, { passive: false });
+  document.addEventListener('gestureend', preventZoom, { passive: false });
+  document.addEventListener('touchmove', function (event) {
+    if (event.touches.length > 1) preventZoom(event);
+  }, { passive: false });
+}());
+
 document.addEventListener("DOMContentLoaded", function () {
   const lang = document.documentElement.lang;
 
