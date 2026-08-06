@@ -1393,6 +1393,45 @@ function evaluarTratamiento() {
    MENÚ HAMBURGUESA
    ====================== */
 
+var themeToggle = null;
+
+function updateThemeToggle() {
+  if (!themeToggle) return;
+  var isDark = document.documentElement.dataset.theme === 'dark';
+  var isEnglish = document.documentElement.lang.toLowerCase().indexOf('en') === 0;
+  var label = isEnglish
+    ? (isDark ? 'Switch to light mode' : 'Switch to dark mode')
+    : (isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+  themeToggle.setAttribute('aria-label', label);
+  themeToggle.setAttribute('title', label);
+  themeToggle.setAttribute('aria-pressed', String(isDark));
+}
+
+function initializeThemeToggle() {
+  themeToggle = document.createElement('button');
+  themeToggle.type = 'button';
+  themeToggle.className = 'theme-toggle';
+  themeToggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>';
+  document.body.appendChild(themeToggle);
+  updateThemeToggle();
+
+  themeToggle.addEventListener('click', function () {
+    var nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = nextTheme;
+    try {
+      localStorage.setItem('infusion-theme', nextTheme);
+    } catch (error) {
+      // El cambio sigue funcionando aunque el navegador bloquee el almacenamiento.
+    }
+    updateThemeToggle();
+    if (typeof gtag === 'function') {
+      gtag('event', 'theme_changed', { theme: nextTheme });
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initializeThemeToggle);
+
 var drugSearchPanel = null;
 var drugSearchInput = null;
 var drugSearchResults = null;
@@ -1876,9 +1915,8 @@ function calculateLidocaina(event) {
 
 document.addEventListener('DOMContentLoaded', function () {
   if (typeof gtag === 'function') {
-    const theme = window.matchMedia('(prefers-color-scheme: dark)').matches
-      ? 'dark'
-      : 'light';
+    const theme = document.documentElement.dataset.theme ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
 
     gtag('event', 'theme_used', {
       theme: theme
