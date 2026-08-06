@@ -602,8 +602,49 @@ function clearRecentInputValuesForSection(sectionIndex) {
 
 var medicationNavigationReady = false;
 
+var MEDICATION_SLUGS = Object.freeze({
+  1: 'noradrenalina',
+  2: 'dopamina',
+  3: 'dobutamina',
+  4: 'milrinona',
+  5: 'adrenalina',
+  6: 'vasopresina',
+  7: 'isoproterenol',
+  8: 'furosemida',
+  9: 'fentanilo',
+  10: 'remifentanilo',
+  11: 'midazolam',
+  12: 'propofol',
+  13: 'dexmedetomidina',
+  14: 'info',
+  15: 'insulina',
+  16: 'atracurio',
+  17: 'labetalol',
+  18: 'nitroprusiato-de-sodio',
+  19: 'lidocaina'
+});
+
+function getMedicationIndexFromHash(hash) {
+  var slug = decodeURIComponent(String(hash || '').replace(/^#/, '')).toLowerCase();
+  var legacyMatch = slug.match(/^medicamento-(\d+)$/);
+  if (legacyMatch && MEDICATION_SLUGS[Number(legacyMatch[1])]) return Number(legacyMatch[1]);
+
+  var matchingIndex = Object.keys(MEDICATION_SLUGS).find(function (sectionIndex) {
+    return MEDICATION_SLUGS[sectionIndex] === slug;
+  });
+  return matchingIndex ? Number(matchingIndex) : null;
+}
+
+function updateMedicationDocumentTitle(sectionIndex) {
+  var menuLink = document.querySelector('.sidebar a[onclick="showSection(' + sectionIndex + ')"]');
+  document.title = menuLink
+    ? menuLink.textContent.trim() + ' | Calculadora de infusiones'
+    : 'Calculadora de infusiones';
+}
+
 function openMedicationMenuFromHistory() {
   closeDrugSearch();
+  document.title = 'Calculadora de infusiones';
   var btn = document.querySelector('.hamburger');
   var sidebar = document.querySelector('.sidebar');
   if (btn) btn.classList.add('is-active');
@@ -620,17 +661,30 @@ function showSection(sectionIndex, navigationOptions) {
   var sectionId = 'section' + sectionIndex;
   var section = document.getElementById(sectionId);
   if (section) section.classList.add('show');
+  if (section) updateMedicationDocumentTitle(Number(sectionIndex));
 
   if (section && medicationNavigationReady && !navigationOptions.fromHistory) {
     window.history.pushState(
       { infusionView: 'section', sectionIndex: Number(sectionIndex) },
       '',
-      '#medicamento-' + sectionIndex
+      '#' + MEDICATION_SLUGS[sectionIndex]
     );
   }
 }
 
 function initializeMedicationNavigation() {
+  var initialSectionIndex = getMedicationIndexFromHash(window.location.hash);
+  if (initialSectionIndex) {
+    window.history.replaceState(
+      { infusionView: 'section', sectionIndex: initialSectionIndex },
+      '',
+      window.location.pathname + window.location.search + '#' + MEDICATION_SLUGS[initialSectionIndex]
+    );
+    medicationNavigationReady = true;
+    showSection(initialSectionIndex, { fromHistory: true });
+    return;
+  }
+
   window.history.replaceState(
     { infusionView: 'menu' },
     '',
@@ -1699,7 +1753,7 @@ window.addEventListener('DOMContentLoaded', function () {
   const btn = document.querySelector('.hamburger');
   const sidebar = document.querySelector('.sidebar');
 
-  if (btn && sidebar) {
+  if (btn && sidebar && !document.querySelector('.section.show')) {
     // Abrir el menú al inicio
     btn.classList.add('is-active');
     sidebar.classList.add('is_active');
