@@ -1,5 +1,6 @@
 :root {
-  --top-bar-height: calc(88px + env(safe-area-inset-top));
+  --top-controls-height: 64px;
+  --top-bar-height: calc(var(--top-controls-height) + env(safe-area-inset-top));
 }
 
 body::before {
@@ -28,22 +29,12 @@ body::before {
     body::before {
         background: linear-gradient(
             to bottom,
-            rgba(28,28,30,1) 0%,
-            rgba(28,28,30,.98) 42%,
-            rgba(28,28,30,.74) 68%,
-            rgba(28,28,30,0)
+            rgba(0,0,0,1) 0%,
+            rgba(0,0,0,1) 58%,
+            rgba(0,0,0,.92) 76%,
+            rgba(0,0,0,0) 100%
         );
     }
-}
-
-html.app-mode {
-  --top-bar-height: 120px;
-}
-
-@media (display-mode: standalone) {
-  :root {
-    --top-bar-height: 120px;
-  }
 }
 
 .lang-switch {
@@ -85,7 +76,7 @@ html.app-mode {
   --border-soft: #ccc;
 
   --card-bg: #f9f9f9;
-  --sidebar-bg: rgba(255, 255, 255, 0.95);
+  --sidebar-bg: rgba(255, 255, 255, 0.86);
 
   --button-bg: var(--accent-color);
   --button-text: #ffffff;
@@ -107,7 +98,7 @@ html.app-mode {
     --border-soft: #1f2937;
 
     --card-bg: #000000;           /* que los recuadros sigan el negro */
-    --sidebar-bg: rgba(0, 0, 0, 0.97);
+    --sidebar-bg: rgba(0, 0, 0, 0.88);
 
     --button-bg: #38bdf8;
     --button-text: #000000;
@@ -255,31 +246,39 @@ a:hover {
 
 .hamburger {
   position: fixed;
-  top: 0;
-  left: 50%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  top: env(safe-area-inset-top);
+  left: max(44px, env(safe-area-inset-left));
+  display: block;
   margin: 0;
   background-color: transparent;
-  height: var(--top-bar-height);
-  width: 35px;
+  height: var(--top-controls-height);
+  width: 40px;
   cursor: pointer;
   z-index: 10001;
   user-select: none;
-  transform: translateX(-50%);
   transition: opacity 0.25s ease;
 }
 
 ._layer {
+  position: absolute;
+  top: 50%;
+  left: 4.5px;
   display: block;
   background: var(--accent-color);
   border-radius: 5px;
-  width: 35px;
-  height: 4px;
-  margin: 3px auto;
+  width: 31px;
+  height: 3.5px;
+  margin: -1.75px 0 0;
   transition: all 0.25s cubic-bezier(0.05, 1.04, 0.72, 0.98),
               background-color 0.25s ease;
+}
+
+._layer.-top {
+  transform: translateY(-9px);
+}
+
+._layer.-bottom {
+  transform: translateY(9px);
 }
 
 /* Hover suave */
@@ -294,7 +293,7 @@ a:hover {
 
 /* Estado activo: forma la X perfectamente centrada */
 .hamburger.is-active ._layer.-top {
-  transform: translateY(10px) rotate(45deg);
+  transform: rotate(45deg);
 }
 
 .hamburger.is-active ._layer.-mid {
@@ -304,7 +303,227 @@ a:hover {
 
 
 .hamburger.is-active ._layer.-bottom {
-  transform: translateY(-10px) rotate(-45deg);
+  transform: rotate(-45deg);
+}
+
+.drug-search-toggle {
+  position: fixed;
+  top: env(safe-area-inset-top);
+  right: max(44px, env(safe-area-inset-right));
+  z-index: 10001;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: var(--top-controls-height);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent-color);
+  cursor: pointer;
+  transition: opacity 160ms ease, transform 220ms cubic-bezier(0.22, 1, 0.36, 1), color 160ms ease;
+}
+
+.drug-search-toggle svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.drug-search-toggle:hover,
+.drug-search-toggle:focus,
+.drug-search-toggle:active {
+  background: transparent;
+  color: var(--accent-soft);
+  transform: none;
+  outline: none;
+}
+
+.drug-search-open .drug-search-toggle {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.78);
+}
+
+.drug-search-panel[hidden] {
+  display: none;
+}
+
+.drug-search-panel {
+  position: fixed;
+  top: env(safe-area-inset-top);
+  right: max(66px, calc(env(safe-area-inset-right) + 66px));
+  left: max(92px, calc(env(safe-area-inset-left) + 92px));
+  z-index: 10000;
+  height: var(--top-controls-height);
+  transform-origin: calc(100% + 22px) 50%;
+  animation: drug-search-detach 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes drug-search-detach {
+  0% {
+    opacity: 0;
+    transform: translateX(18px) scaleX(0.14) scaleY(0.82);
+    filter: blur(2px);
+  }
+  58% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scaleX(1) scaleY(1);
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drug-search-panel {
+    animation: none;
+  }
+
+  .drug-search-toggle {
+    transition: none;
+  }
+}
+
+.drug-search-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.drug-search-input-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0;
+}
+
+.drug-search-input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 46px;
+  margin: 0;
+  padding: 0 44px 0 14px;
+  border: 1px solid color-mix(in srgb, var(--accent-color) 34%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg-color) 86%, var(--accent-color) 14%);
+  color: var(--text-color);
+  font: inherit;
+  font-size: 16px;
+  outline: none;
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 2px 7px rgba(35, 73, 108, 0.12);
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+}
+
+.drug-search-input::placeholder {
+  color: var(--muted-text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  opacity: 0.62;
+}
+
+.drug-search-input:focus {
+  border-color: var(--accent-color);
+  background: color-mix(in srgb, var(--bg-color) 93%, var(--accent-color) 7%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    0 0 0 4px color-mix(in srgb, var(--accent-color) 14%, transparent),
+    0 4px 12px rgba(35, 73, 108, 0.12);
+  transform: none;
+}
+
+.drug-search-close {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  width: 38px;
+  height: 38px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted-text);
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.drug-search-close:hover,
+.drug-search-close:focus,
+.drug-search-close:active {
+  border: 0;
+  background: transparent;
+  color: var(--accent-color);
+  transform: translateY(-50%);
+  outline: none;
+}
+
+.drug-search-results {
+  position: absolute;
+  top: calc(100% - 2px);
+  right: 0;
+  left: 0;
+  max-height: min(390px, calc(100dvh - var(--top-bar-height) - 12px));
+  overflow-y: auto;
+  padding: 5px 10px 9px;
+  border: 1px solid var(--border-soft);
+  border-radius: 0 0 15px 15px;
+  background: var(--card-bg);
+  box-shadow: 0 14px 30px rgba(17, 43, 68, 0.16);
+}
+
+.drug-search-results[hidden] {
+  display: none;
+}
+
+.drug-search-result {
+  display: block;
+  width: 100%;
+  min-height: 46px;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--border-soft);
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-color);
+  text-align: left;
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.drug-search-result:last-child {
+  border-bottom: 0;
+}
+
+.drug-search-result:hover,
+.drug-search-result:focus-visible {
+  background: color-mix(in srgb, var(--accent-color) 8%, transparent);
+  color: var(--accent-color);
+  outline: none;
+}
+
+.drug-search-empty {
+  margin: 0;
+  padding: 18px 8px;
+  color: var(--muted-text);
+  text-align: center;
+  font-size: 0.9rem;
+  line-height: 1.35;
 }
 /* === SIDEBAR === */
 
@@ -314,6 +533,8 @@ a:hover {
 
 .sidebar {
   background-color: var(--sidebar-bg);
+  backdrop-filter: blur(24px) saturate(145%);
+  -webkit-backdrop-filter: blur(24px) saturate(145%);
   position: fixed;
   top: 0;
   left: 0;
@@ -407,6 +628,7 @@ a:hover {
 }
 
 .section-title-row > h2 {
+  margin-top: 0;
   margin-left: 0;
   margin-right: 0;
   margin-bottom: 1px;
@@ -420,7 +642,7 @@ a:hover {
   height: 30px;
   min-height: 30px;
   padding: 0;
-  margin: 0 0 2px;
+  margin: 0 0 7px;
   border: 0;
   border-radius: 50%;
   background: transparent;
@@ -469,8 +691,17 @@ h3 {
   border: 0.5px solid var(--muted-text);
   border-radius: 150px;
   width: 65%;
+  max-width: 420px;
   margin: 0 auto;
   text-align: center;
+  box-sizing: border-box;
+}
+
+#section19 > h3,
+#section19 > .presentation-heading {
+  width: min(330px, 92%);
+  white-space: nowrap;
+  font-size: 11.5pt;
 }
 
 .presentation-heading {
@@ -579,7 +810,7 @@ h8 {
 
 .content {
   flex-grow: 1;
-  padding-top: calc(var(--top-bar-height) + 16px);
+  padding-top: calc(var(--top-bar-height) - 8px);
   padding-bottom: calc(28px + env(safe-area-inset-bottom));
   margin: 0 auto;
   line-height: 33px;
@@ -846,7 +1077,7 @@ h8 {
   z-index: 12000;
   display: grid;
   place-items: center;
-  padding: 20px;
+  padding: 12px;
   background: rgba(8, 18, 30, 0.46);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -854,12 +1085,12 @@ h8 {
 
 .presentation-dialog-card {
   position: relative;
-  width: min(430px, 100%);
-  max-height: calc(100vh - 40px);
+  width: min(350px, calc(100% - 8px));
+  max-height: calc(100dvh - 24px);
   overflow-y: auto;
-  padding: 28px 24px 24px;
+  padding: 18px 18px 16px;
   border: 1px solid var(--border-soft);
-  border-radius: 24px;
+  border-radius: 20px;
   background: var(--card-bg);
   color: var(--text-color);
   box-sizing: border-box;
@@ -868,8 +1099,9 @@ h8 {
 }
 
 .presentation-dialog-card h2 {
-  margin: 8px 0;
-  font-size: 1.2rem;
+  margin: 5px 28px 6px;
+  font-size: 1.02rem;
+  line-height: 1.2;
 }
 
 .presentation-dialog-icon {
@@ -880,8 +1112,8 @@ h8 {
 }
 
 .presentation-dialog-icon svg {
-  width: 26px;
-  height: 26px;
+  width: 21px;
+  height: 21px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -890,16 +1122,17 @@ h8 {
 }
 
 .presentation-dialog-help {
-  margin: 0 auto 18px;
+  max-width: 290px;
+  margin: 0 auto 11px;
   color: var(--muted-text);
-  font-size: 0.88rem;
-  line-height: 1.4;
+  font-size: 0.78rem;
+  line-height: 1.3;
 }
 
 .presentation-dialog-card label {
   display: block;
-  margin: 12px 0 5px;
-  font-size: 0.86rem;
+  margin: 8px 0 7px;
+  font-size: 0.79rem;
   font-weight: 700;
 }
 
@@ -911,7 +1144,8 @@ h8 {
 }
 
 .presentation-input-row input {
-  width: 110px;
+  width: 96px;
+  min-height: 42px;
   margin: 0;
 }
 
@@ -922,28 +1156,69 @@ h8 {
 }
 
 .presentation-dialog-error {
-  min-height: 18px;
-  margin: 10px 0 0;
+  min-height: 12px;
+  margin: 4px 0 0;
   color: #c43d4d;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
 }
 
 .presentation-dialog-actions {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  margin-top: 4px;
-  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 0;
+  flex-wrap: nowrap;
 }
 
 .presentation-dialog-actions button {
+  flex: 1 1 0;
   width: auto;
-  min-width: 130px;
+  min-width: 0;
+  padding: 9px 10px;
+  font-size: 0.82rem;
 }
 
 .presentation-reset {
   background: transparent;
   color: var(--accent-color);
+}
+
+.presentation-dialog-card > .access-dialog-close {
+  top: 7px;
+  right: 7px;
+  width: 32px;
+  height: 32px;
+  font-size: 1.35rem;
+}
+
+@media (max-height: 600px) {
+  .presentation-dialog {
+    place-items: start center;
+    padding: 8px 10px;
+  }
+
+  .presentation-dialog-card {
+    max-height: calc(100dvh - 16px);
+    padding: 12px 16px 12px;
+  }
+
+  .presentation-dialog-icon {
+    display: none;
+  }
+
+  .presentation-dialog-card h2 {
+    margin-top: 1px;
+    font-size: 0.94rem;
+  }
+
+  .presentation-dialog-help {
+    margin-bottom: 6px;
+    font-size: 0.74rem;
+  }
+
+  .presentation-dialog-card label {
+    margin: 5px 0 6px;
+  }
 }
 
 @media (max-width: 560px) {
@@ -979,10 +1254,10 @@ h8 {
 /* Mantiene las etiquetas y los campos en dos columnas estables. */
 .section > form {
   display: grid;
-  grid-template-columns: minmax(0, 160px) 68px;
+  grid-template-columns: minmax(0, 142px) 68px 72px;
   justify-content: center;
   align-items: center;
-  column-gap: 12px;
+  column-gap: 6px;
   row-gap: 0;
 }
 
@@ -1003,6 +1278,118 @@ h8 {
   margin: 5px 0;
 }
 
+.section > form > input[aria-invalid="true"] {
+  border-color: #c85b67;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #c85b67 14%, transparent);
+}
+
+.section > form > .recent-values {
+  grid-column: 3;
+  justify-self: start;
+}
+
+.section > form > .rate-stepper {
+  grid-column: 3;
+  justify-self: start;
+}
+
+.recent-values[hidden] {
+  display: none;
+}
+
+.recent-values {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 72px;
+  max-width: 72px;
+  min-height: 34px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+}
+
+.recent-values::-webkit-scrollbar {
+  display: none;
+}
+
+.recent-values > .recent-value-chip {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 30px;
+  max-width: 48px;
+  height: 30px;
+  min-height: 30px;
+  margin: 0;
+  padding: 0 6px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--muted-text) 32%, transparent);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--bg-color) 91%, var(--muted-text) 9%);
+  color: var(--muted-text);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  scroll-snap-align: start;
+}
+
+.recent-values > .recent-value-chip:hover,
+.recent-values > .recent-value-chip:focus,
+.recent-values > .recent-value-chip:active {
+  border-color: color-mix(in srgb, var(--muted-text) 58%, transparent);
+  background: color-mix(in srgb, var(--bg-color) 82%, var(--muted-text) 18%);
+  color: var(--text-color);
+  outline: none;
+  transform: none;
+}
+
+.rate-stepper {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  width: 72px;
+  min-height: 34px;
+}
+
+.rate-stepper > .rate-stepper-button {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 28px;
+  min-height: 28px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--muted-text) 32%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-color) 92%, var(--muted-text) 8%);
+  color: var(--muted-text);
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.rate-stepper > .rate-stepper-button.is-adjustment {
+  flex-basis: 24px;
+  width: 24px;
+}
+
+.rate-stepper > .rate-stepper-button:hover,
+.rate-stepper > .rate-stepper-button:focus,
+.rate-stepper > .rate-stepper-button:active {
+  border-color: color-mix(in srgb, var(--muted-text) 58%, transparent);
+  background: color-mix(in srgb, var(--bg-color) 82%, var(--muted-text) 18%);
+  color: var(--text-color);
+  outline: none;
+  transform: none;
+}
+
 .section > form > button,
 .section > form > p {
   grid-column: 1 / -1;
@@ -1016,6 +1403,63 @@ h8 {
 
 .section > form > button {
   margin-top: 18px;
+}
+
+.section > form > .calculation-actions {
+  grid-column: 1 / -1;
+  justify-self: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  margin-top: 18px;
+}
+
+.calculation-actions > button[type="submit"] {
+  width: 100%;
+}
+
+.calculation-actions > .calculation-reset {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 7px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  padding: 0;
+  border-color: color-mix(in srgb, var(--accent-color) 55%, transparent);
+  background: transparent;
+  color: var(--accent-color);
+  transform: translateY(-50%);
+}
+
+.calculation-actions > .calculation-reset[hidden] {
+  display: none;
+}
+
+.calculation-reset svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
+}
+
+.calculation-actions > .calculation-reset:hover,
+.calculation-actions > .calculation-reset:focus-visible {
+  background: color-mix(in srgb, var(--accent-color) 10%, transparent);
+  color: var(--accent-color);
+  transform: translateY(-50%) scale(1.04);
+}
+
+.calculation-actions > .calculation-reset:active {
+  transform: translateY(-50%) scale(0.96);
 }
 
 #section8 > form {
@@ -1122,7 +1566,7 @@ p[id^="result"],
 }
 
 .result-reveal {
-  animation: result-reveal 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: result-reveal 380ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .section > form > .calculation-detail {
@@ -1294,11 +1738,15 @@ p[id^="result"],
 }
 
 @keyframes result-reveal {
-  from {
-    opacity: 0.45;
-    transform: translateY(7px) scale(0.985);
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
   }
-  to {
+  62% {
+    opacity: 1;
+    transform: translateY(-1px) scale(1.025);
+  }
+  100% {
     opacity: 1;
     transform: translateY(0) scale(1);
   }

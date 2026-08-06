@@ -44,6 +44,51 @@ function formatResultNumber(value, decimals) {
   return value.toFixed(decimals).replace('.', ',');
 }
 
+function validateCalculationValues(event) {
+  const form = event.target;
+  const section = form?.closest('.section');
+  if (!form?.matches('.section > form') || !section) return;
+
+  const inputs = Array.from(form.querySelectorAll(':scope > input'));
+  let hasInvalidValue = false;
+
+  inputs.forEach(function (input) {
+    const label = form.querySelector('label[for="' + input.id + '"]');
+    const labelText = String(label?.textContent || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase();
+    const value = Number(String(input.value || '').trim().replace(',', '.'));
+    const allowsZero = labelText.includes('solucion') || labelText.includes('solution');
+    const isValid = Number.isFinite(value) && (allowsZero ? value >= 0 : value > 0);
+    if (isValid) input.removeAttribute('aria-invalid');
+    else input.setAttribute('aria-invalid', 'true');
+    hasInvalidValue = hasInvalidValue || !isValid;
+  });
+
+  if (!hasInvalidValue) return;
+
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const sectionIndex = Number(section.id.replace('section', ''));
+  const result = document.getElementById('result' + sectionIndex) ||
+    form.querySelector('[id^="resultadoTratamiento"]');
+  if (result) {
+    result.textContent = document.documentElement.lang === 'en' ? 'Check the values.' : 'Revisá los valores.';
+    clearDoseRange(result.id);
+  }
+  const detail = section.querySelector('[data-calculation-detail]');
+  if (detail) detail.hidden = true;
+}
+
+document.addEventListener('submit', validateCalculationValues, true);
+
+document.addEventListener('input', function (event) {
+  if (event.target.matches('.section > form > input')) {
+    event.target.removeAttribute('aria-invalid');
+  }
+});
+
 /* ======================
    PRESENTACIONES EDITABLES
    ====================== */
@@ -295,6 +340,12 @@ function initializeResultAnimations() {
     const observer = new MutationObserver(function () {
       if (!result.textContent.trim()) return;
 
+      if (/\b(?:NaN|Infinity)\b/i.test(result.textContent)) {
+        result.textContent = document.documentElement.lang === 'en' ? 'Check the values.' : 'Revisá los valores.';
+        clearDoseRange(result.id);
+        return;
+      }
+
       result.classList.remove('result-reveal');
       cancelAnimationFrame(animationFrame);
       animationFrame = requestAnimationFrame(function () {
@@ -307,6 +358,233 @@ function initializeResultAnimations() {
 }
 
 document.addEventListener('DOMContentLoaded', initializeResultAnimations);
+
+const RESET_FORM_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+  '<path d="M20 11a8 8 0 1 1-2.34-5.66L20 7.68"/>' +
+  '<path d="M20 3v4.68h-4.68"/></svg>';
+
+function initializeCalculationResetButtons() {
+  document.querySelectorAll('.section').forEach(function (section) {
+    const match = section.id.match(/^section(\d+)$/);
+    const sectionIndex = match ? Number(match[1]) : NaN;
+    if (!Number.isInteger(sectionIndex) || sectionIndex === 14 || sectionIndex === 15) return;
+
+    const form = section.querySelector(':scope > form');
+    const submitButton = form?.querySelector(':scope > button[type="submit"]');
+    const result = document.getElementById('result' + sectionIndex);
+    if (!form || !submitButton || !result) return;
+
+    const actions = document.createElement('div');
+    actions.className = 'calculation-actions';
+    submitButton.before(actions);
+    actions.appendChild(submitButton);
+
+    const resetButton = document.createElement('button');
+    resetButton.className = 'calculation-reset';
+    resetButton.type = 'button';
+    resetButton.innerHTML = RESET_FORM_ICON;
+    resetButton.hidden = true;
+    resetButton.setAttribute('aria-label', 'Limpiar datos de ' +
+      (section.querySelector(':scope > h2, :scope > .section-title-row h2')?.textContent || 'la calculadora'));
+
+    const dataFields = Array.from(form.querySelectorAll('input, textarea, select'));
+    const updateResetVisibility = function () {
+      resetButton.hidden = !dataFields.some(function (field) {
+        return String(field.value || '').trim() !== '';
+      });
+    };
+
+    dataFields.forEach(function (field) {
+      field.addEventListener('input', updateResetVisibility);
+      field.addEventListener('change', updateResetVisibility);
+    });
+
+    resetButton.addEventListener('click', function () {
+      form.reset();
+      result.textContent = '';
+      result.classList.remove('result-reveal');
+      clearDoseRange(result.id);
+      resetButton.hidden = true;
+
+      const detail = document.querySelector('[data-calculation-detail="' + sectionIndex + '"]');
+      if (detail) {
+        detail.open = false;
+        detail.hidden = true;
+      }
+    });
+    actions.appendChild(resetButton);
+    updateResetVisibility();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initializeCalculationResetButtons);
+
+const RECENT_INPUT_VALUES_KEY = 'infusion-recent-input-values-v1';
+const RECENT_INPUT_VALUES_LIMIT = 3;
+let recentInputValuesState = {};
+
+function readRecentInputValues() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(RECENT_INPUT_VALUES_KEY) || '{}');
+    return stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+  } catch (_error) {
+    return {};
+  }
+}
+
+function isRecentValueField(input) {
+  const form = input.closest('.section > form');
+  if (!form || !input.id) return false;
+  const label = form.querySelector('label[for="' + input.id + '"]');
+  if (!label) return false;
+  const labelText = normalizeDrugSearchText(label.textContent);
+  return /ampoll|vial|solucion|solution|volumen final|final volume|peso|weight/.test(labelText);
+}
+
+function isRateStepperField(input) {
+  const form = input.closest('.section > form');
+  if (!form || !input.id) return false;
+  const label = form.querySelector('label[for="' + input.id + '"]');
+  return Boolean(label && normalizeDrugSearchText(label.textContent).includes('ml/h'));
+}
+
+function dispatchInputValueChange(input) {
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function runAutomaticCalculation(form) {
+  if (!form || !form.checkValidity()) return;
+  const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+  submitEvent.isAutomaticCalculation = true;
+  form.dispatchEvent(submitEvent);
+}
+
+function renderRecentInputValues(input, container, recentValues) {
+  const values = Array.isArray(recentValues[input.id])
+    ? recentValues[input.id].slice(0, RECENT_INPUT_VALUES_LIMIT)
+    : [];
+  container.replaceChildren();
+  container.hidden = values.length === 0;
+
+  const label = input.form?.querySelector('label[for="' + input.id + '"]')?.textContent.trim() || 'este campo';
+  values.forEach(function (value) {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'recent-value-chip';
+    chip.textContent = value;
+    chip.title = value;
+    chip.setAttribute('aria-label', 'Usar ' + value + ' en ' + label);
+    chip.addEventListener('click', function () {
+      input.value = value;
+      dispatchInputValueChange(input);
+    });
+    container.appendChild(chip);
+  });
+}
+
+function initializeRecentInputValues() {
+  recentInputValuesState = readRecentInputValues();
+  const recentValues = recentInputValuesState;
+
+  document.querySelectorAll('.section > form').forEach(function (form) {
+    const formInputs = Array.from(form.querySelectorAll(':scope > input'));
+    const fields = formInputs.filter(isRecentValueField);
+    const rateFields = formInputs.filter(isRateStepperField);
+    if (!fields.length && !rateFields.length) return;
+
+    const containers = new Map();
+    fields.forEach(function (input) {
+      const container = document.createElement('div');
+      container.className = 'recent-values';
+      container.dataset.recentInputId = input.id;
+      container.setAttribute('aria-label', 'Valores recientes');
+      input.after(container);
+      containers.set(input, container);
+      renderRecentInputValues(input, container, recentValues);
+    });
+
+    rateFields.forEach(function (input) {
+      const stepper = document.createElement('div');
+      stepper.className = 'rate-stepper';
+      stepper.setAttribute('aria-label', 'Ajustar ml/h');
+
+      [
+        { text: '+', label: 'Aumentar 1 ml/h', recalculates: true, action: function () {
+          const current = Number(String(input.value || '0').replace(',', '.'));
+          const next = Math.round(((Number.isFinite(current) ? current : 0) + 1) * 1000) / 1000;
+          input.value = String(next).replace('.', ',');
+        } },
+        { text: '−', label: 'Disminuir 1 ml/h', recalculates: true, action: function () {
+          const current = Number(String(input.value || '0').replace(',', '.'));
+          const next = Math.max(1, Math.round(((Number.isFinite(current) ? current : 0) - 1) * 1000) / 1000);
+          input.value = String(next).replace('.', ',');
+        } },
+        { text: '×', label: 'Borrar ml/h', action: function () { input.value = ''; } }
+      ].forEach(function (control) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'rate-stepper-button';
+        button.classList.add(control.recalculates ? 'is-adjustment' : 'is-clear');
+        button.textContent = control.text;
+        button.setAttribute('aria-label', control.label);
+        button.addEventListener('click', function () {
+          control.action();
+          dispatchInputValueChange(input);
+          if (control.recalculates) runAutomaticCalculation(form);
+        });
+        stepper.appendChild(button);
+      });
+
+      input.after(stepper);
+    });
+
+    form.addEventListener('submit', function (event) {
+      if (event.isAutomaticCalculation) return;
+      let changed = false;
+      fields.forEach(function (input) {
+        const value = String(input.value || '').trim();
+        if (!value) return;
+
+        const previous = Array.isArray(recentValues[input.id]) ? recentValues[input.id] : [];
+        const normalizedValue = value.replace(',', '.');
+        recentValues[input.id] = [value].concat(previous.filter(function (savedValue) {
+          return String(savedValue).replace(',', '.') !== normalizedValue;
+        })).slice(0, RECENT_INPUT_VALUES_LIMIT);
+        renderRecentInputValues(input, containers.get(input), recentValues);
+        changed = true;
+      });
+
+      if (changed) {
+        try {
+          localStorage.setItem(RECENT_INPUT_VALUES_KEY, JSON.stringify(recentValues));
+        } catch (_error) {
+          // La calculadora sigue funcionando aunque el navegador impida guardar datos locales.
+        }
+      }
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initializeRecentInputValues);
+
+function clearRecentInputValuesForSection(sectionIndex) {
+  const section = document.getElementById('section' + sectionIndex);
+  const fields = Array.from(section?.querySelectorAll(':scope > form > input') || []).filter(isRecentValueField);
+  if (!fields.length) return;
+
+  fields.forEach(function (input) {
+    delete recentInputValuesState[input.id];
+    const container = section.querySelector('[data-recent-input-id="' + input.id + '"]');
+    if (container) renderRecentInputValues(input, container, recentInputValuesState);
+  });
+
+  try {
+    localStorage.setItem(RECENT_INPUT_VALUES_KEY, JSON.stringify(recentInputValuesState));
+  } catch (_error) {
+    // La limpieza visual se mantiene aunque el navegador impida modificar datos locales.
+  }
+}
 
 // Mostrar secciones
 function showSection(sectionIndex) {
@@ -655,20 +933,22 @@ function initializeCalculationHistories() {
     history.innerHTML = '<div class="calculation-history-header">' +
       '<h3>Historial</h3>' +
       '<button class="calculation-history-clear" type="button" ' +
-      'aria-label="Borrar historial de cálculos">×</button>' +
+      'aria-label="Borrar historial y valores recientes">×</button>' +
       '</div><ol class="calculation-history-list"></ol>';
     form.after(history);
 
     history.querySelector('.calculation-history-clear').addEventListener('click', function () {
       localStorage.removeItem(calculationHistoryKey(sectionIndex));
+      clearRecentInputValuesForSection(sectionIndex);
       renderCalculationHistory(sectionIndex);
     });
 
-    form.addEventListener('submit', function () {
+    form.addEventListener('submit', function (event) {
+      const isAutomaticCalculation = Boolean(event.isAutomaticCalculation);
       setTimeout(function () {
         const resultText = extractCalculationResult(result);
         renderCalculationDetail(sectionIndex, resultText);
-        addCalculationHistory(sectionIndex, resultText);
+        if (!isAutomaticCalculation) addCalculationHistory(sectionIndex, resultText);
       }, 0);
     });
   });
@@ -1113,6 +1393,139 @@ function evaluarTratamiento() {
    MENÚ HAMBURGUESA
    ====================== */
 
+var drugSearchPanel = null;
+var drugSearchInput = null;
+var drugSearchResults = null;
+var searchableDrugs = [];
+
+function normalizeDrugSearchText(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function closeDrugSearch() {
+  if (!drugSearchPanel) return;
+  drugSearchPanel.hidden = true;
+  document.body.classList.remove('drug-search-open');
+}
+
+function renderDrugSearchResults() {
+  if (!drugSearchInput || !drugSearchResults) return;
+
+  var query = normalizeDrugSearchText(drugSearchInput.value);
+  var isEnglish = document.documentElement.lang.toLowerCase().indexOf('en') === 0;
+  drugSearchResults.replaceChildren();
+
+  if (!query) {
+    drugSearchResults.hidden = true;
+    return;
+  }
+
+  drugSearchResults.hidden = false;
+
+  var matches = searchableDrugs.filter(function (drug) {
+    return drug.searchText.indexOf(query) !== -1;
+  });
+
+  if (!matches.length) {
+    var empty = document.createElement('p');
+    empty.className = 'drug-search-empty';
+    empty.textContent = isEnglish ? 'No matching drugs.' : 'No se encontraron coincidencias.';
+    drugSearchResults.appendChild(empty);
+    return;
+  }
+
+  matches.forEach(function (drug) {
+    var result = document.createElement('button');
+    result.type = 'button';
+    result.className = 'drug-search-result';
+    result.textContent = drug.label;
+    result.addEventListener('click', function () {
+      showSection(drug.sectionIndex);
+      var btn = document.querySelector('.hamburger');
+      var sidebar = document.querySelector('.sidebar');
+      if (btn) btn.classList.remove('is-active');
+      if (sidebar) sidebar.classList.remove('is_active');
+      closeDrugSearch();
+    });
+    drugSearchResults.appendChild(result);
+  });
+}
+
+function openDrugSearch() {
+  if (!drugSearchPanel || !drugSearchInput) return;
+  drugSearchPanel.hidden = false;
+  document.body.classList.add('drug-search-open');
+  drugSearchInput.value = '';
+  renderDrugSearchResults();
+  window.setTimeout(function () { drugSearchInput.focus(); }, 30);
+}
+
+function initializeDrugSearch() {
+  var links = Array.from(document.querySelectorAll('.sidebar ul li > a'));
+  searchableDrugs = links.map(function (link) {
+    var match = (link.getAttribute('onclick') || '').match(/showSection\((\d+)\)/);
+    if (!match || match[1] === '14') return null;
+    var sectionIndex = Number(match[1]);
+    var fullTitle = document.querySelector('#section' + sectionIndex + ' h2');
+    var label = link.textContent.trim();
+    return {
+      label: label,
+      sectionIndex: sectionIndex,
+      searchText: normalizeDrugSearchText(label + ' ' + (fullTitle ? fullTitle.textContent : ''))
+    };
+  }).filter(Boolean);
+
+  var isEnglish = document.documentElement.lang.toLowerCase().indexOf('en') === 0;
+  var toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'drug-search-toggle';
+  toggle.setAttribute('aria-label', isEnglish ? 'Search drugs' : 'Buscar drogas');
+  toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.5"></circle><path d="m16 16 4.2 4.2"></path></svg>';
+
+  drugSearchPanel = document.createElement('div');
+  drugSearchPanel.className = 'drug-search-panel';
+  drugSearchPanel.hidden = true;
+  drugSearchPanel.innerHTML =
+    '<div class="drug-search-card" role="search">' +
+      '<div class="drug-search-input-row">' +
+        '<input class="drug-search-input" type="text" inputmode="search" autocomplete="off" enterkeyhint="search" aria-label="' +
+          (isEnglish ? 'Drug name' : 'Nombre de la droga') + '" placeholder="' +
+          (isEnglish ? 'SEARCH' : 'BUSCAR') + '">' +
+        '<button class="drug-search-close" type="button" aria-label="' +
+          (isEnglish ? 'Close search' : 'Cerrar búsqueda') + '">×</button>' +
+      '</div>' +
+      '<div class="drug-search-results" aria-live="polite"></div>' +
+    '</div>';
+
+  document.body.appendChild(toggle);
+  document.body.appendChild(drugSearchPanel);
+  drugSearchInput = drugSearchPanel.querySelector('.drug-search-input');
+  drugSearchResults = drugSearchPanel.querySelector('.drug-search-results');
+
+  toggle.addEventListener('click', function () {
+    if (drugSearchPanel.hidden) openDrugSearch();
+    else closeDrugSearch();
+  });
+  drugSearchInput.addEventListener('input', renderDrugSearchResults);
+  drugSearchPanel.querySelector('.drug-search-close').addEventListener('click', closeDrugSearch);
+  document.addEventListener('click', function (event) {
+    if (!drugSearchPanel.hidden &&
+        !drugSearchPanel.contains(event.target) &&
+        !toggle.contains(event.target)) {
+      closeDrugSearch();
+    }
+  });
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') closeDrugSearch();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initializeDrugSearch);
+
 var menu = document.querySelector('.hamburger');
 
 function toggleMenu(event) {
@@ -1121,6 +1534,7 @@ function toggleMenu(event) {
   var btn = document.querySelector('.hamburger');
   var sidebar = document.querySelector('.sidebar');
   if (!btn || !sidebar) return;
+  closeDrugSearch();
   btn.classList.toggle('is-active');
   sidebar.classList.toggle('is_active');
 
