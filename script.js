@@ -12,6 +12,25 @@
   }, { passive: false });
 }());
 
+/* Feedback háptico sutil en controles. En web se usa vibración cuando está disponible. */
+function triggerHapticFeedback() {
+  try {
+    const haptics = window.Capacitor?.Plugins?.Haptics;
+    if (haptics?.impact) {
+      haptics.impact({ style: 'LIGHT' }).catch(function () {});
+      return;
+    }
+
+    if (typeof navigator.vibrate === 'function') navigator.vibrate(8);
+  } catch (_error) {
+    // La interacción continúa normalmente en equipos sin respuesta háptica.
+  }
+}
+
+document.addEventListener('click', function (event) {
+  if (event.target.closest('button, .hamburger, .sidebar a')) triggerHapticFeedback();
+}, { passive: true });
+
 document.addEventListener("DOMContentLoaded", function () {
   const lang = document.documentElement.lang;
 
