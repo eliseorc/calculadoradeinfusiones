@@ -490,8 +490,8 @@ async function edvcGeneratePdf() {
     y += height;
   });
 
-  const signature = report.querySelector('.signature img');
-  if (signature) {
+  const signature = report.querySelector('#edvcSignature img');
+  if (signature && !signature.closest('#edvcSignature')?.hidden) {
     pageBreak(28);
     const signatureData = await imageElementDataUrl(signature);
     const signatureHeight = 25;

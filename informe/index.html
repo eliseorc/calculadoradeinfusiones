@@ -6,7 +6,26 @@
     <title>Ecocardiograma</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="user-locked">
+    <section class="user-access" id="userAccess" aria-labelledby="userAccessTitle">
+      <div class="user-access-card">
+        <h1 id="userAccessTitle">Ingresar</h1>
+        <div class="user-choices" id="userChoices" role="group" aria-label="Usuarios">
+          <button type="button" data-report-user="eliseo"><span class="profile-avatar" aria-hidden="true"></span><span>Eliseo</span></button>
+          <button type="button" data-report-user="sebastian"><span class="profile-avatar" aria-hidden="true"></span><span>Sebastián</span></button>
+        </div>
+        <form class="user-pin-form" id="userPinForm" autocomplete="off" hidden>
+          <label for="userPin">PIN de <strong id="selectedUserName"></strong>
+            <input id="userPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" />
+          </label>
+          <p class="user-access-error" id="userAccessError" role="alert" aria-live="polite"></p>
+          <div class="user-pin-actions">
+            <button class="secondary" id="backUserButton" type="button">Volver</button>
+            <button class="primary" type="submit">Ingresar</button>
+          </div>
+        </form>
+      </div>
+    </section>
     <main>
       <aside class="form-panel no-print">
         <div class="study-tabs" role="tablist" aria-label="Tipo de informe">
@@ -35,9 +54,9 @@
             <p class="data-check" id="dataCheck" role="status" aria-live="polite"></p>
           </section>
 
-          <section>
+          <section class="quick-measures-section">
             <h3>Carga rápida de medidas</h3>
-            <p class="tab-help">Ingresá cada valor y presioná <kbd>Tab</kbd> o <kbd>Enter</kbd> para pasar al siguiente casillero.</p>
+            <p class="tab-help"><kbd>Enter</kbd> o <kbd>Tab</kbd>: avanzar · <kbd>Shift</kbd> + cualquiera: volver.</p>
             <div class="quick-fields">
               <label>VI dias<input name="lvDd" inputmode="decimal" /></label><label>VI sist<input name="lvDs" inputmode="decimal" /></label>
               <label>SIV<input name="ivsd" inputmode="decimal" /></label><label>PP<input name="pwd" inputmode="decimal" /></label>
@@ -199,7 +218,7 @@
             <div class="description-title"><button class="secondary no-print" id="regenerateConclusionsButton" type="button">Regenerar texto</button></div>
             <div id="conclusions" class="conclusion-grid"></div>
           </section>
-          <div class="signature"><img src="assets/signature.png" alt="Firma y sello del Dr. Eliseo Rodríguez Claus" /></div>
+          <div class="signature" id="ecoSignature"><img src="assets/signature.png" alt="Firma y sello del Dr. Eliseo Rodríguez Claus" /></div>
         </article>
         <div class="report-actions no-print"><button class="primary" id="pdfButton" type="button">Descargar PDF</button><button class="secondary" id="wordButton" type="button">Descargar .doc</button><button class="secondary" id="copyTextButton" type="button">Copiar texto simple</button><button class="secondary" id="printButton" type="button">Imprimir</button></div>
       </section>
@@ -223,14 +242,19 @@
             <div class="description-title"><button class="secondary no-print" id="edvcRegenerateConclusionsButton" type="button">Regenerar texto</button></div>
             <div id="edvcConclusions" class="conclusion-grid"></div>
           </section>
-          <div class="signature"><img src="assets/signature.png" alt="Firma y sello del Dr. Eliseo Rodríguez Claus" /></div>
+          <div class="signature" id="edvcSignature"><img src="assets/signature.png" alt="Firma y sello del Dr. Eliseo Rodríguez Claus" /></div>
         </article>
         <div class="report-actions no-print"><button class="primary" id="edvcPdfButton" type="button">Descargar PDF</button><button class="secondary" id="edvcWordButton" type="button">Descargar .doc</button><button class="secondary" id="edvcCopyTextButton" type="button">Copiar texto simple</button><button class="secondary" id="edvcPrintButton" type="button">Imprimir</button></div>
       </section>
     </main>
+    <div class="active-user-bar no-print" id="activeUserBar" hidden>
+      <span>Usuario: <strong id="activeUserName"></strong></span>
+      <button id="switchUserButton" type="button">Cerrar sesión</button>
+    </div>
     <script src="assets/html2canvas.min.js"></script>
     <script src="assets/jspdf.umd.min.js"></script>
     <script src="app.js"></script>
     <script src="edvc.js"></script>
+    <script src="user-access.js"></script>
   </body>
 </html>

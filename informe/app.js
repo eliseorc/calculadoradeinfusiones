@@ -2,6 +2,20 @@ const form = document.querySelector('#ecoForm');
 const el = (id) => document.querySelector(id);
 const manualMetricEdits = {};
 let ecoInitialFormState = '';
+const normalMotionPhrases = [
+  'No se observan alteraciones segmentarias de la motilidad parietal en reposo.',
+  'Motilidad parietal segmentaria conservada.',
+  'Sin alteraciones segmentarias de la motilidad parietal.',
+  'No se identifican trastornos regionales de la contractilidad.',
+  'Contractilidad segmentaria en reposo conservada.'
+];
+let normalMotionPhraseIndex = Math.floor(Math.random() * normalMotionPhrases.length);
+function chooseNextNormalMotionPhrase() {
+  if (normalMotionPhrases.length < 2) return;
+  let nextIndex = normalMotionPhraseIndex;
+  while (nextIndex === normalMotionPhraseIndex) nextIndex = Math.floor(Math.random() * normalMotionPhrases.length);
+  normalMotionPhraseIndex = nextIndex;
+}
 const number = (data, key) => {
   const raw = String(data.get(key) ?? '').trim().replace(',', '.');
   const v = Number(raw);
@@ -166,7 +180,7 @@ function autoDescriptions(data, c) {
           : `Ventrículo de dimensiones conservadas, con ${functionText}. IMVI ${textNumber(mass)} g/m².`;
     }
   }
-  const motion = goodWindow ? 'No se evidenciaron alteraciones de motilidad parietal en reposo.' : 'En reposo no impresiona presentar alteraciones de motilidad parietal (ventana acústica subóptima).';
+  const motion = goodWindow ? normalMotionPhrases[normalMotionPhraseIndex] : 'En reposo no impresiona presentar alteraciones de motilidad parietal (ventana acústica subóptima).';
   const relaxation = relaxationAssessment(data, c)?.description || '';
   const rv = number(data, 'rv'); const tapse = number(data, 'tapse'); const ivc = number(data, 'ivc');
   let right = 'Completar medidas del ventrículo derecho.';
@@ -190,9 +204,18 @@ function autoDescriptions(data, c) {
             : `Dilatación severa. Área: ${textNumber(laArea)} cm².`;
   const ra = !raArea ? 'Normal.' : raArea <= 18 ? `Normal. Área: ${textNumber(raArea)} cm².` : `Dilatada. Área: ${textNumber(raArea)} cm².`;
   const mr = String(data.get('mr') || '').toLowerCase();
-  const mitralBase = age && age > 80 ? 'Esclerocalcificación del anillo valvular, con apertura conservada.' : age && age > 60 ? 'De valvas finas, con ligera esclerosis del anillo valvular, apertura conservada.' : 'De valvas finas, con apertura conservada.';
-  const mitralBidimensional = age && age > 80 ? 'Esclerocalcificación del anillo valvular, con apertura conservada.' : age && age > 60 ? 'De valvas finas, con ligera esclerosis del anillo valvular, apertura conservada y cierre a nivel del plano.' : 'De valvas finas, con apertura conservada y cierre valvular a nivel del plano.';
-  const mitral = !isDoppler ? mitralBidimensional : !mr || mr === '-' || mr === 'no' ? `${mitralBase} Competente.` : mr === 'trivial' ? `${mitralBase} Insuficiencia trivial, protosistólica.` : `${mitralBase} Insuficiencia ${mr}.`;
+  const mitralBase = age && age > 80
+    ? 'Esclerocalcificación del anillo valvular, con movilidad y apertura valvulares conservadas.'
+    : age && age > 60
+      ? 'Valvas finas, con movilidad y apertura conservadas. Ligera esclerosis del anillo valvular.'
+      : 'Valvas finas, con movilidad y apertura conservadas.';
+  const mitral = !isDoppler
+    ? mitralBase
+    : !mr || mr === '-' || mr === 'no'
+      ? `${mitralBase} Sin insuficiencia.`
+      : mr === 'trivial'
+        ? `${mitralBase} Insuficiencia trivial, protosistólica.`
+        : `${mitralBase} Insuficiencia ${mr}.`;
   const tr = String(data.get('tr') || '').toLowerCase(); const gtt = number(data, 'trGradient');
   let tricuspid = data.get('doppler') === 'No' ? 'De valvas finas, con apertura conservada.' : !tr || tr === '-' || tr === 'no' ? 'Morfología conservada, sin insuficiencia.' : `Insuficiencia ${tr}.`;
   if (data.get('doppler') !== 'No' && gtt && c.psap) tricuspid = `Insuficiencia ${tr || 'tricuspídea'}, con GTT de ${textNumber(gtt)} mmHg. Presión sistólica de la arteria pulmonar estimada en ${textNumber(c.psap)} mmHg.`;
@@ -426,12 +449,18 @@ function render() {
   renderDescriptions(data, c);
   const lv = number(data,'lvef');
   renderConclusions(data, c);
+  updateQuickFieldStates();
 }
 function ecoComparableFormState() {
   return JSON.stringify(Array.from(new FormData(form).entries()).filter(([key]) => key !== 'studyDate'));
 }
 function updateNewReportButtonState() {
   el('#clearButton').classList.toggle('has-data', Boolean(ecoInitialFormState) && ecoComparableFormState() !== ecoInitialFormState);
+}
+function updateQuickFieldStates() {
+  form.querySelectorAll('.quick-fields input:not([type="checkbox"])').forEach(input => {
+    input.classList.toggle('is-empty', !String(input.value || '').trim());
+  });
 }
 function normalizeDopplerWaveInput(target) {
   if (!target || !['eWave', 'aWave'].includes(target.name)) return;
@@ -453,9 +482,16 @@ form.addEventListener('keydown', event => {
   const fields = Array.from(form.querySelectorAll('input:not([type="hidden"]), select, textarea'))
     .filter(field => !field.disabled && field.offsetParent !== null);
   const currentIndex = fields.indexOf(event.target);
-  if (currentIndex < 0 || currentIndex === fields.length - 1) return;
+  const nextIndex = currentIndex + (event.shiftKey ? -1 : 1);
+  if (currentIndex < 0 || nextIndex < 0 || nextIndex >= fields.length) return;
   event.preventDefault();
-  fields[currentIndex + 1].focus();
+  fields[nextIndex].focus();
+  if (fields[nextIndex].tagName === 'INPUT' && typeof fields[nextIndex].select === 'function') fields[nextIndex].select();
+});
+const quickMeasuresSection = form.querySelector('.quick-measures-section');
+quickMeasuresSection?.querySelector('.quick-fields')?.addEventListener('focusin', () => {
+  const sectionTop = quickMeasuresSection.getBoundingClientRect().top;
+  if (sectionTop > 8) window.scrollTo(0, window.pageYOffset + sectionTop - 8);
 });
 el('#reportTitle').addEventListener('input', () => { el('#reportTitle').dataset.dirty = 'true'; });
 el('#description').addEventListener('input', () => { el('#description').dataset.dirty = 'true'; });
@@ -466,6 +502,7 @@ el('#clearButton').addEventListener('click', () => {
   const studyDate = form.elements.studyDate.value;
   form.reset();
   form.elements.studyDate.value = studyDate;
+  chooseNextNormalMotionPhrase();
   Object.keys(manualMetricEdits).forEach(key => delete manualMetricEdits[key]);
   el('#reportTitle').dataset.dirty = 'false';
   el('#reportTitle').textContent = automaticReportTitle(new FormData(form));
@@ -695,11 +732,11 @@ async function generateSelectablePdf() {
     y += rowHeight;
   });
 
-  const signature = document.querySelector('.signature img');
-  if (signature) {
-    pageBreakIfNeeded(29);
+  const signature = document.querySelector('#ecoSignature img');
+  if (signature && !signature.closest('#ecoSignature')?.hidden) {
+    const signatureHeight = document.documentElement.dataset.reportUser === 'sebastian' ? 35 : 25;
+    pageBreakIfNeeded(signatureHeight + 4);
     const signatureData = await imageElementDataUrl(signature);
-    const signatureHeight = 25;
     const signatureWidth = signatureHeight * (signature.naturalWidth / signature.naturalHeight);
     pdf.addImage(signatureData, 'PNG', 153, y + 2, signatureWidth, signatureHeight, undefined, 'FAST');
   }
