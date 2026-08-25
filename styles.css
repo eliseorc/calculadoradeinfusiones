@@ -631,6 +631,54 @@ a:hover {
   color: var(--text-color);
 }
 
+/* Acceso web limitado exclusivamente en navegadores Android. */
+.android-web-limited .sidebar li.android-web-locked {
+  opacity: 0.42;
+}
+
+.android-web-limited .sidebar li.android-web-locked a {
+  color: var(--muted-text);
+}
+
+.android-web-limited .sidebar li.android-web-locked .menu-favorite-indicator {
+  display: none !important;
+}
+
+.android-menu-lock {
+  position: absolute;
+  top: 50%;
+  right: max(22px, env(safe-area-inset-right));
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: var(--muted-text);
+  transform: translateY(-50%);
+}
+
+.android-menu-lock svg,
+.drug-search-lock svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.drug-search-result.is-android-locked {
+  color: var(--muted-text);
+  opacity: 0.5;
+}
+
+.drug-search-lock {
+  display: inline-grid;
+  place-items: center;
+  margin-left: 9px;
+  vertical-align: middle;
+}
+
 .menu-favorite-indicator {
   display: flex;
   align-items: center;
@@ -945,6 +993,124 @@ h8 {
   justify-content: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+/* === DESCARGA DE LA APP ANDROID === */
+
+.android-store-dialog[hidden] {
+  display: none;
+}
+
+.android-store-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 14000;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: color-mix(in srgb, var(--bg-color) 52%, rgba(8, 18, 30, 0.62));
+  backdrop-filter: blur(18px) saturate(135%);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+}
+
+.android-store-dialog-card {
+  position: relative;
+  width: min(390px, 100%);
+  padding: 30px 24px 24px;
+  border: 1px solid color-mix(in srgb, var(--border-color) 35%, transparent);
+  border-radius: 28px;
+  box-sizing: border-box;
+  background: color-mix(in srgb, var(--card-bg) 92%, transparent);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.27);
+  color: var(--text-color);
+  text-align: center;
+  animation: android-store-in 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.android-store-dialog-card > img {
+  position: static;
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 11px;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(35, 88, 143, 0.18);
+}
+
+.android-store-eyebrow {
+  display: block;
+  color: var(--accent-color);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.android-store-dialog-card h2 {
+  margin: 7px 0 9px;
+  font-size: 1.32rem;
+  line-height: 1.16;
+}
+
+.android-store-dialog-card p {
+  margin: 0 auto 22px;
+  color: var(--muted-text);
+  font-size: 0.92rem;
+  line-height: 1.48;
+}
+
+.android-store-primary,
+.android-store-secondary {
+  width: 100%;
+  margin: 0;
+}
+
+.android-store-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 52px;
+  border-radius: 16px;
+}
+
+.android-store-primary:focus,
+.android-store-primary:focus-visible {
+  background: var(--button-bg);
+  color: var(--button-text);
+  transform: none;
+}
+
+.android-play-mark {
+  font-size: 0.92rem;
+}
+
+.android-store-secondary {
+  min-height: 42px;
+  margin-top: 9px;
+  border: 0;
+  background: transparent;
+  color: var(--muted-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.android-store-secondary:hover,
+.android-store-secondary:focus-visible {
+  background: color-mix(in srgb, var(--muted-text) 9%, transparent);
+  color: var(--text-color);
+}
+
+@keyframes android-store-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* === INSTALACIÓN DE LA WEB APP === */

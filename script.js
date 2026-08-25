@@ -621,6 +621,88 @@ function clearRecentInputValuesForSection(sectionIndex) {
 
 var medicationNavigationReady = false;
 
+const ANDROID_PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.calculadoradeinfusiones';
+const ANDROID_WEB_FREE_SECTIONS = Object.freeze([1, 2, 14]);
+const ANDROID_LOCK_ICON =
+  '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<rect x="5.5" y="10.5" width="13" height="10" rx="2.5"></rect>' +
+    '<path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7"></path>' +
+  '</svg>';
+
+function isAndroidWebBrowser() {
+  return /android/i.test(window.navigator.userAgent) && !isNativeContainer();
+}
+
+function isAndroidWebRestrictedSection(sectionIndex) {
+  return isAndroidWebBrowser() && !ANDROID_WEB_FREE_SECTIONS.includes(Number(sectionIndex));
+}
+
+function createAndroidStoreDialog() {
+  if (document.getElementById('android-store-dialog')) return;
+
+  const isEnglish = document.documentElement.lang === 'en';
+  const dialog = document.createElement('div');
+  dialog.className = 'android-store-dialog';
+  dialog.id = 'android-store-dialog';
+  dialog.setAttribute('role', 'dialog');
+  dialog.setAttribute('aria-modal', 'true');
+  dialog.setAttribute('aria-labelledby', 'android-store-dialog-title');
+  dialog.hidden = true;
+  dialog.innerHTML =
+    '<div class="android-store-dialog-card">' +
+      '<button class="access-dialog-close android-store-close" type="button" aria-label="' +
+        (isEnglish ? 'Close' : 'Cerrar') + '">×</button>' +
+      '<img src="' + (isEnglish ? '../' : '') + 'infusion128x128.png" alt="">' +
+      '<span class="android-store-eyebrow">' +
+        (isEnglish ? 'Available on Google Play' : 'Disponible en Google Play') + '</span>' +
+      '<h2 id="android-store-dialog-title">' +
+        (isEnglish ? 'Get the complete calculator' : 'Accedé a la calculadora completa') + '</h2>' +
+      '<p>' + (isEnglish
+        ? 'Download the Android app to use every medication, favorites, history and presentation settings.'
+        : 'Descargá la app para Android y utilizá todos los medicamentos, favoritos, historial y ajustes de presentación.') +
+      '</p>' +
+      '<button class="android-store-primary" type="button">' +
+        '<span class="android-play-mark" aria-hidden="true">▶</span>' +
+        (isEnglish ? 'Get it on Google Play' : 'Descargar en Google Play') +
+      '</button>' +
+      '<button class="android-store-secondary" type="button">' +
+        (isEnglish ? 'Continue with free calculators' : 'Continuar con Noradrenalina y Dopamina') +
+      '</button>' +
+    '</div>';
+
+  document.body.appendChild(dialog);
+  dialog.querySelector('.android-store-primary').addEventListener('click', openAndroidPlayStore);
+  dialog.querySelectorAll('.android-store-close, .android-store-secondary').forEach(function (button) {
+    button.addEventListener('click', closeAndroidStoreDialog);
+  });
+  dialog.addEventListener('click', function (event) {
+    if (event.target === dialog) closeAndroidStoreDialog();
+  });
+}
+
+function openAndroidStoreSplash(sectionIndex) {
+  createAndroidStoreDialog();
+  const dialog = document.getElementById('android-store-dialog');
+  dialog.hidden = false;
+  document.body.style.overflow = 'hidden';
+  dialog.querySelector('.android-store-primary').focus();
+  trackInstallEvent('android_web_locked_content', {
+    section: Number(sectionIndex) || undefined
+  });
+}
+
+function closeAndroidStoreDialog() {
+  const dialog = document.getElementById('android-store-dialog');
+  if (!dialog) return;
+  dialog.hidden = true;
+  document.body.style.overflow = '';
+}
+
+function openAndroidPlayStore() {
+  trackInstallEvent('google_play_clicked', { source: 'android_web' });
+  window.location.href = ANDROID_PLAY_STORE_URL;
+}
+
 var MEDICATION_SLUGS = Object.freeze({
   1: 'noradrenalina',
   2: 'dopamina',
@@ -673,6 +755,10 @@ function openMedicationMenuFromHistory() {
 // Mostrar secciones
 function showSection(sectionIndex, navigationOptions) {
   navigationOptions = navigationOptions || {};
+  if (isAndroidWebRestrictedSection(sectionIndex)) {
+    openAndroidStoreSplash(sectionIndex);
+    return false;
+  }
   var sections = document.getElementsByClassName('section');
   for (var i = 0; i < sections.length; i++) {
     sections[i].classList.remove('show');
@@ -1651,6 +1737,13 @@ function renderDrugSearchResults() {
     result.type = 'button';
     result.className = 'drug-search-result';
     result.textContent = drug.label;
+    if (drug.isRestricted) {
+      result.classList.add('is-android-locked');
+      var lock = document.createElement('span');
+      lock.className = 'drug-search-lock';
+      lock.innerHTML = ANDROID_LOCK_ICON;
+      result.appendChild(lock);
+    }
     result.addEventListener('click', function () {
       showSection(drug.sectionIndex);
       var btn = document.querySelector('.hamburger');
@@ -1683,6 +1776,7 @@ function initializeDrugSearch() {
     return {
       label: label,
       sectionIndex: sectionIndex,
+      isRestricted: isAndroidWebRestrictedSection(sectionIndex),
       searchText: normalizeDrugSearchText(label + ' ' + (fullTitle ? fullTitle.textContent : ''))
     };
   }).filter(Boolean);
@@ -1760,7 +1854,14 @@ if (menu) {
 // Cerrar menú al elegir una opción (la estrella de favoritos no lo cierra)
 var menuLinks = document.querySelectorAll('.sidebar ul li > a');
 menuLinks.forEach(function (link) {
-  link.addEventListener('click', toggleMenu, false);
+  link.addEventListener('click', function (event) {
+    var match = (link.getAttribute('onclick') || '').match(/showSection\((\d+)\)/);
+    if (match && isAndroidWebRestrictedSection(Number(match[1]))) {
+      event.preventDefault();
+      return;
+    }
+    toggleMenu(event);
+  }, false);
 });
 
 // Abrir/cerrar inicial si querés (podés quitarlo si no lo usás)
@@ -1808,6 +1909,27 @@ function isIOSDevice() {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent) ||
     (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
 }
+
+function initializeAndroidWebAccess() {
+  if (!isAndroidWebBrowser()) return;
+  document.documentElement.classList.add('android-web-limited');
+  createAndroidStoreDialog();
+
+  document.querySelectorAll('.sidebar ul > li').forEach(function (item) {
+    const link = item.querySelector(':scope > a[onclick^="showSection("]');
+    const match = (link?.getAttribute('onclick') || '').match(/showSection\((\d+)\)/);
+    if (!match || !isAndroidWebRestrictedSection(Number(match[1]))) return;
+
+    item.classList.add('android-web-locked');
+    link.setAttribute('aria-label', link.textContent.trim() + ', disponible en la app para Android');
+    const lock = document.createElement('span');
+    lock.className = 'android-menu-lock';
+    lock.innerHTML = ANDROID_LOCK_ICON;
+    item.appendChild(lock);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initializeAndroidWebAccess);
 
 function installBannerWasDismissed() {
   return Number(localStorage.getItem(INSTALL_DISMISS_KEY) || 0) > Date.now();
@@ -1865,7 +1987,8 @@ function createInstallExperience() {
 }
 
 function showInstallBanner(mode, force) {
-  if (isAppInstalled()) return;
+  if (isAndroidWebBrowser()) mode = 'play-store';
+  if (isAppInstalled() && mode !== 'play-store') return;
   if (!force && installBannerWasDismissed()) return;
   createInstallExperience();
 
@@ -1881,12 +2004,16 @@ function showInstallBanner(mode, force) {
   const action = document.getElementById('pwa-install-action');
   pendingInstallMode = null;
   banner.dataset.installMode = mode;
-  message.textContent = mode === 'ios'
-    ? (isEnglish ? 'Add it to your Home Screen' : 'Agregala a tu pantalla de inicio')
-    : (isEnglish ? 'Use it like an application' : 'Usala como una aplicación');
-  action.textContent = mode === 'native'
-    ? (isEnglish ? 'Install' : 'Instalar')
-    : (isEnglish ? 'How' : 'Cómo');
+  message.textContent = mode === 'play-store'
+    ? (isEnglish ? 'Unlock every medication' : 'Accedé a todos los medicamentos')
+    : mode === 'ios'
+      ? (isEnglish ? 'Add it to your Home Screen' : 'Agregala a tu pantalla de inicio')
+      : (isEnglish ? 'Use it like an application' : 'Usala como una aplicación');
+  action.textContent = mode === 'play-store'
+    ? (isEnglish ? 'Google Play' : 'Google Play')
+    : mode === 'native'
+      ? (isEnglish ? 'Install' : 'Instalar')
+      : (isEnglish ? 'How' : 'Cómo');
   banner.hidden = false;
   document.body.classList.add('install-banner-visible');
   trackInstallEvent('install_banner_shown', { platform: mode });
@@ -1939,6 +2066,11 @@ async function handleInstallAction() {
   const mode = banner?.dataset.installMode || (isIOSDevice() ? 'ios' : 'manual');
   trackInstallEvent('install_action_clicked', { platform: mode });
 
+  if (mode === 'play-store' || isAndroidWebBrowser()) {
+    openAndroidPlayStore();
+    return;
+  }
+
   if (mode === 'native' && deferredInstallPrompt) {
     await deferredInstallPrompt.prompt();
     const choice = await deferredInstallPrompt.userChoice;
@@ -1952,6 +2084,11 @@ async function handleInstallAction() {
 }
 
 function agregarAInicio() {
+  if (isAndroidWebBrowser()) {
+    showInstallBanner('play-store', true);
+    openAndroidStoreSplash();
+    return;
+  }
   if (isAppInstalled()) return;
   if (deferredInstallPrompt) {
     showInstallBanner('native', true);
@@ -1966,7 +2103,7 @@ function agregarAInicio() {
 window.addEventListener('beforeinstallprompt', function (event) {
   event.preventDefault();
   deferredInstallPrompt = event;
-  showInstallBanner('native');
+  showInstallBanner(isAndroidWebBrowser() ? 'play-store' : 'native');
 });
 
 window.addEventListener('appinstalled', function () {
@@ -1977,7 +2114,11 @@ window.addEventListener('appinstalled', function () {
 document.addEventListener('DOMContentLoaded', function () {
   createInstallExperience();
 
-  if (isIOSDevice() && !isAppInstalled()) {
+  if (isAndroidWebBrowser()) {
+    window.setTimeout(function () {
+      showInstallBanner('play-store');
+    }, 900);
+  } else if (isIOSDevice() && !isAppInstalled()) {
     window.setTimeout(function () {
       showInstallBanner('ios');
     }, 900);
