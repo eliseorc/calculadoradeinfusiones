@@ -699,7 +699,7 @@ function closeAndroidStoreDialog() {
 }
 
 function openAndroidPlayStore() {
-  trackInstallEvent('google_play_clicked', { source: 'android_web' });
+  trackInstallEvent('play_store_clicked', { source: 'android_web' });
   window.location.href = ANDROID_PLAY_STORE_URL;
 }
 
