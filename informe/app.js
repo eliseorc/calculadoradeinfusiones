@@ -32,6 +32,14 @@ const patientFileName = (data) => {
     .trim();
   return cleanName || 'Informe';
 };
+function patientNameForReport(rawName) {
+  const cleanName = String(rawName || '').replace(/\s+/g, ' ').trim();
+  if (!cleanName || cleanName.includes(',')) return cleanName;
+  const firstSpace = cleanName.indexOf(' ');
+  return firstSpace < 0
+    ? cleanName
+    : `${cleanName.slice(0, firstSpace)}, ${cleanName.slice(firstSpace + 1)}`;
+}
 
 function calculate(data) {
   const weight = number(data, 'weight'), height = number(data, 'height');
@@ -406,8 +414,8 @@ function render() {
   el('#dimensionlessResult').textContent = c.dimensionlessIndex ? fmtUpTo(c.dimensionlessIndex, 2) : '—';
   el('#laVolumeIndexResult').textContent = c.laVolumeIndex == null ? '—' : `${fmt(c.laVolumeIndex, 0)} ml/m²`;
   el('#wedgePressureResult').textContent = c.wedgePressure == null ? '—' : `${fmt(c.wedgePressure, 0)} mmHg`;
-  const name = data.get('patientName') || 'Apellido y nombre: —';
-  el('#reportPatient').textContent = name.startsWith('Apellido y nombre:') ? name : `Apellido y nombre: ${name}`;
+  const name = patientNameForReport(data.get('patientName'));
+  el('#reportPatient').textContent = `Apellido y nombre: ${name || '—'}`;
   el('#reportDate').textContent = data.get('studyDate') ? new Date(`${data.get('studyDate')}T12:00:00`).toLocaleDateString('es-AR') : '';
   const val = (key, unit = '', decimals = 1) => reportValue(data, key, unit, decimals);
   const calculated = (num, unit = '', decimals = 1) => num == null ? '—' : `${fmt(num, decimals)}${unit ? ` ${unit}` : ''}`;
@@ -831,7 +839,9 @@ function plainReportText() {
     }),
     '', 'CONCLUSIONES:',
     ...compactConclusions,
-    '', '\t\t\tRODRIGUEZ CLAUS, ELISEO', '\t\t\tMédico Esp. en Cardiología - MP 118.231'
+    ...(window.activeReportUser === 'eliseo-imp'
+      ? []
+      : ['', '\t\t\tRODRIGUEZ CLAUS, ELISEO', '\t\t\tMédico Esp. en Cardiología - MP 118.231'])
   ].join('\n')}`;
 }
 

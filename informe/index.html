@@ -13,6 +13,7 @@
         <div class="user-choices" id="userChoices" role="group" aria-label="Usuarios">
           <button type="button" data-report-user="eliseo"><span class="profile-avatar" aria-hidden="true"></span><span>Eliseo</span></button>
           <button type="button" data-report-user="sebastian"><span class="profile-avatar" aria-hidden="true"></span><span>Sebastián</span></button>
+          <button type="button" data-report-user="eliseo-imp"><span class="profile-avatar" aria-hidden="true"></span><span>Eliseo (IMP)</span></button>
         </div>
         <form class="user-pin-form" id="userPinForm" autocomplete="off" hidden>
           <label for="userPin">PIN de <strong id="selectedUserName"></strong>
@@ -43,8 +44,8 @@
                   <label class="title-mode-toggle" for="bidimensionalTitle"><input id="bidimensionalTitle" name="bidimensionalTitle" type="checkbox" />T. 2D</label>
                 </div>
               </div>
-              <label>Fecha del estudio<input name="studyDate" type="date" /></label>
-              <label>Apellido y nombre<input name="patientName" placeholder="Apellido, Nombre" /></label>
+              <label class="study-date-field">Fecha del estudio<input name="studyDate" type="date" /></label>
+              <label class="patient-name-field">Apellido y nombre<input name="patientName" placeholder="Apellido, Nombre" /></label>
               <label>Sexo<select name="sex"><option value="">Seleccionar</option><option value="M">Masculino</option><option value="F">Femenino</option></select></label>
               <label>Edad<input name="age" type="number" min="0" max="130" placeholder="Años" /></label>
               <label>Peso (kg)<input name="weight" type="number" min="1" step="0.1" /></label>
@@ -98,8 +99,8 @@
           <section>
             <h3>Paciente</h3>
             <div class="fields edvc-patient-fields">
-              <label>Fecha del estudio<input name="studyDate" type="date" /></label>
-              <label>Apellido y nombre<input name="patientName" placeholder="Apellido, Nombre" /></label>
+              <label class="study-date-field">Fecha del estudio<input name="studyDate" type="date" /></label>
+              <label class="patient-name-field">Apellido y nombre<input name="patientName" placeholder="Apellido, Nombre" /></label>
               <label class="edvc-normal-toggle"><input name="normalStudy" type="checkbox" checked />Estudio normal</label>
               <div class="edvc-normal-imt-fields">
                 <label>EMI izquierdo<input name="normalLeftImt" inputmode="decimal" placeholder="mm" /></label>

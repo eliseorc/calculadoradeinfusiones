@@ -1,7 +1,8 @@
 (() => {
   const USERS = {
     eliseo: { name: 'Eliseo', pin: '9352', edvc: true, simpleText: true, signature: 'assets/signature.png', signatureAlt: 'Firma y sello del Dr. Eliseo Rodríguez Claus' },
-    sebastian: { name: 'Sebastián', pin: '1993', edvc: false, simpleText: false, signature: 'assets/signature-sebastian.png', signatureAlt: 'Firma y sello del Dr. Sebastián González Horcada' }
+    sebastian: { name: 'Sebastián', pin: '1993', edvc: false, simpleText: false, signature: 'assets/signature-sebastian.png', signatureAlt: 'Firma y sello del Dr. Sebastián González Horcada' },
+    'eliseo-imp': { name: 'Eliseo (IMP)', pin: '9352', edvc: true, simpleText: true, signature: '', imp: true }
   };
   const SESSION_KEY = 'ecoInformeActiveUser';
   const access = document.querySelector('#userAccess');
@@ -70,6 +71,28 @@
     if (edvcTab) edvcTab.hidden = !user.edvc;
     if (copyTextButton) copyTextButton.hidden = !user.simpleText;
     setSignature(user);
+
+    document.querySelectorAll('.patient-name-field').forEach(field => { field.hidden = Boolean(user.imp); });
+    document.querySelectorAll('.study-date-field').forEach(field => { field.hidden = Boolean(user.imp); });
+    document.querySelectorAll('.institutional-banner').forEach(banner => { banner.hidden = Boolean(user.imp); });
+    ['#reportPatient', '#edvcReportPatient'].forEach(selector => {
+      const patientName = document.querySelector(selector);
+      if (patientName) patientName.hidden = Boolean(user.imp);
+    });
+    document.querySelectorAll('.patient-line').forEach(line => { line.hidden = Boolean(user.imp); });
+    ['#pdfButton', '#wordButton', '#printButton', '#edvcPdfButton', '#edvcWordButton', '#edvcPrintButton'].forEach(selector => {
+      const button = document.querySelector(selector);
+      if (button) button.hidden = Boolean(user.imp);
+    });
+    const studyTypeField = document.querySelector('.study-type-field');
+    if (studyTypeField) studyTypeField.hidden = Boolean(user.imp);
+    if (user.imp) {
+      const studyType = document.querySelector('#studyType');
+      const bidimensionalTitle = document.querySelector('#bidimensionalTitle');
+      if (studyType) studyType.value = 'Si';
+      if (bidimensionalTitle) bidimensionalTitle.checked = false;
+      document.querySelector('#ecoForm')?.dispatchEvent(new Event('input', { bubbles: true }));
+    }
 
     if (!user.edvc && document.body.dataset.activeStudy === 'edvc') {
       document.querySelector('#ecoTab')?.click();

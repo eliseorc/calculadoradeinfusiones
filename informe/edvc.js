@@ -288,7 +288,7 @@ function edvcRender() {
     document.querySelector(`#${side}Suggestion`).textContent = edvcIacSuggestion(data, side);
   });
 
-  const patientName = String(data.get('patientName') || '').trim();
+  const patientName = patientNameForReport(data.get('patientName'));
   document.querySelector('#edvcReportPatient').textContent = `Apellido y nombre: ${patientName || '—'}`;
   document.querySelector('#edvcReportDate').textContent = data.get('studyDate')
     ? new Date(`${data.get('studyDate')}T12:00:00`).toLocaleDateString('es-AR')
@@ -351,10 +351,9 @@ function edvcPlainText() {
     'CONCLUSIONES',
     '',
     ...conclusions,
-    '',
-    '',
-    '\t\tRODRIGUEZ CLAUS, ELISEO',
-    '\t\tMédico Esp. en Cardiología - MP 118.231'
+    ...(window.activeReportUser === 'eliseo-imp'
+      ? []
+      : ['', '', '\t\tRODRIGUEZ CLAUS, ELISEO', '\t\tMédico Esp. en Cardiología - MP 118.231'])
   ].join('\n')}`;
 }
 
