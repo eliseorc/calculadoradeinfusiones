@@ -2233,3 +2233,73 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 });
+
+// En Android nativo, mantenemos el campo activo dentro del área que deja el teclado.
+// `adjustResize` resuelve la mayoría de los equipos; Visual Viewport cubre WebViews
+// antiguas o personalizadas (por ejemplo, algunos Huawei con Android 10).
+function enableNativeAndroidKeyboardAssist() {
+  if (!isNativeContainer() || !/android/i.test(window.navigator.userAgent)) return;
+
+  var viewport = window.visualViewport;
+  var keyboardOpen = false;
+  var pendingScroll = 0;
+  var largestViewportHeight = viewport ? viewport.height : window.innerHeight;
+
+  function isEditable(element) {
+    return element && element.matches && element.matches('input, textarea, select, [contenteditable="true"]');
+  }
+
+  function keepActiveFieldVisible() {
+    var active = document.activeElement;
+    if (!isEditable(active)) return;
+
+    window.clearTimeout(pendingScroll);
+    pendingScroll = window.setTimeout(function () {
+      var rect = active.getBoundingClientRect();
+      var visibleTop = viewport ? viewport.offsetTop : 0;
+      var visibleBottom = visibleTop + (viewport ? viewport.height : window.innerHeight);
+      var margin = 24;
+
+      if (rect.bottom > visibleBottom - margin || rect.top < visibleTop + margin) {
+        active.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+      }
+    }, 180);
+  }
+
+  function updateKeyboardState() {
+    var visibleHeight = viewport ? viewport.height : window.innerHeight;
+    if (!isEditable(document.activeElement)) {
+      largestViewportHeight = Math.max(largestViewportHeight, visibleHeight);
+    }
+    var nowOpen = isEditable(document.activeElement) && largestViewportHeight - visibleHeight > 120;
+
+    if (nowOpen !== keyboardOpen) {
+      keyboardOpen = nowOpen;
+      document.body.classList.toggle('native-keyboard-open', keyboardOpen);
+    }
+
+    if (keyboardOpen) keepActiveFieldVisible();
+  }
+
+  document.addEventListener('focusin', function (event) {
+    if (!isEditable(event.target)) return;
+    document.body.classList.add('native-keyboard-open');
+    keepActiveFieldVisible();
+  });
+
+  document.addEventListener('focusout', function () {
+    window.setTimeout(function () {
+      if (!isEditable(document.activeElement)) {
+        document.body.classList.remove('native-keyboard-open');
+        keyboardOpen = false;
+      }
+    }, 120);
+  });
+
+  if (viewport) {
+    viewport.addEventListener('resize', updateKeyboardState);
+    viewport.addEventListener('scroll', updateKeyboardState);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', enableNativeAndroidKeyboardAssist);
