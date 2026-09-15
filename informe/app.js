@@ -839,9 +839,7 @@ function plainReportText() {
     }),
     '', 'CONCLUSIONES:',
     ...compactConclusions,
-    ...(window.activeReportUser === 'eliseo-imp'
-      ? []
-      : ['', '\t\t\tRODRIGUEZ CLAUS, ELISEO', '\t\t\tMédico Esp. en Cardiología - MP 118.231'])
+    '', '\t\t\tRODRIGUEZ CLAUS, ELISEO', '\t\t\tMédico Esp. en Cardiología - MP 118.231'
   ].join('\n')}`;
 }
 

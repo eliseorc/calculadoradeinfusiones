@@ -351,9 +351,10 @@ function edvcPlainText() {
     'CONCLUSIONES',
     '',
     ...conclusions,
-    ...(window.activeReportUser === 'eliseo-imp'
-      ? []
-      : ['', '', '\t\tRODRIGUEZ CLAUS, ELISEO', '\t\tMédico Esp. en Cardiología - MP 118.231'])
+    '',
+    '',
+    '\t\tRODRIGUEZ CLAUS, ELISEO',
+    '\t\tMédico Esp. en Cardiología - MP 118.231'
   ].join('\n')}`;
 }
 
