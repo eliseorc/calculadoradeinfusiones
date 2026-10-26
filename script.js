@@ -82,7 +82,7 @@ function validateCalculationValues(event) {
   const section = form?.closest('.section');
   if (!form?.matches('.section > form') || !section) return;
 
-  const inputs = Array.from(form.querySelectorAll(':scope > input'));
+  const inputs = Array.from(form.querySelectorAll(':scope > input, :scope > .calculation-direction-field > input'));
   let hasInvalidValue = false;
 
   inputs.forEach(function (input) {
@@ -117,7 +117,7 @@ function validateCalculationValues(event) {
 document.addEventListener('submit', validateCalculationValues, true);
 
 document.addEventListener('input', function (event) {
-  if (event.target.matches('.section > form > input')) {
+  if (event.target.matches('.section > form > input, .calculation-direction-field > input')) {
     event.target.removeAttribute('aria-invalid');
   }
 });
@@ -545,22 +545,26 @@ function initializeRecentInputValues() {
       [
         { text: '+', label: 'Aumentar 1 ml/h', recalculates: true, action: function () {
           const current = Number(String(input.value || '0').replace(',', '.'));
-          const next = Math.round(((Number.isFinite(current) ? current : 0) + 1) * 1000) / 1000;
+          const next = adjustInfusionInput(current, Number(input.dataset.adjustmentStep || 1), 1);
           input.value = String(next).replace('.', ',');
         } },
         { text: '−', label: 'Disminuir 1 ml/h', recalculates: true, action: function () {
           const current = Number(String(input.value || '0').replace(',', '.'));
-          const next = Math.max(1, Math.round(((Number.isFinite(current) ? current : 0) - 1) * 1000) / 1000);
+          const next = adjustInfusionInput(current, Number(input.dataset.adjustmentStep || 1), -1);
           input.value = String(next).replace('.', ',');
         } },
-        { text: '×', label: 'Borrar ml/h', action: function () { input.value = ''; } }
+        { text: '', label: 'Limpiar ml/h', action: function () { input.value = ''; } }
       ].forEach(function (control) {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'rate-stepper-button';
         button.classList.add(control.recalculates ? 'is-adjustment' : 'is-clear');
         button.textContent = control.text;
+        if (!control.recalculates) {
+          button.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 7v5h-5M20 12a8 8 0 1 0-2.3 5.7"/></svg>';
+        }
         button.setAttribute('aria-label', control.label);
+        button.title = control.label;
         button.addEventListener('click', function () {
           control.action();
           dispatchInputValueChange(input);
@@ -1013,7 +1017,9 @@ function formatHistoryDate(timestamp) {
 }
 
 function localizeStoredResult(resultText) {
-  return String(resultText || '').replace(/(\d)\.(\d)/g, '$1,$2');
+  return String(resultText || '')
+    .replace(/(\d)\.(\d)/g, '$1,$2')
+    .replace(/ml\/h\s*(?:·\s*)?para una dosis de\b/gi, 'ml/h · equivale a');
 }
 
 function renderCalculationHistory(sectionIndex) {
@@ -1040,6 +1046,8 @@ function renderCalculationHistory(sectionIndex) {
 function extractCalculationResult(resultElement) {
   const copy = resultElement.cloneNode(true);
   copy.querySelector('.dose-status')?.remove();
+  const doseContext = copy.querySelector('.inverse-dose-context');
+  if (doseContext) doseContext.before(document.createTextNode(' · '));
   copy.querySelectorAll('br').forEach(function (breakElement) {
     breakElement.replaceWith(' ');
   });
@@ -1083,12 +1091,19 @@ function renderCalculationDetail(sectionIndex, resultText) {
     inputParts.push(formatCalculationNumber(solution) + ' ' + (config.solutionLabel || 'ml solución'));
   }
   if (config.weight) inputParts.push(formatCalculationNumber(weight) + ' kg');
-  inputParts.push(formatCalculationNumber(speed) + ' ml/h');
+  const inverse = document.getElementById('section' + sectionIndex).querySelector('form').dataset.direction === 'inverse';
+  inputParts.push(formatCalculationNumber(speed) + ' ' + (inverse ? getDoseUnit(config) : 'ml/h'));
 
   let operation = '(' + formatCalculationNumber(concentration) + ' × ' +
     formatCalculationNumber(speed) + ')';
   if (config.weight) operation += ' ÷ ' + formatCalculationNumber(weight);
   if (config.divideBy60) operation += ' ÷ 60';
+  if (inverse) {
+    operation = formatCalculationNumber(speed);
+    if (config.weight) operation += ' × ' + formatCalculationNumber(weight);
+    if (config.divideBy60) operation += ' × 60';
+    operation += ' ÷ ' + formatCalculationNumber(concentration);
+  }
 
   detail.querySelector('.calculation-detail-data').textContent = inputParts.join(' · ');
   detail.querySelector('.calculation-detail-concentration').textContent =
@@ -2303,3 +2318,207 @@ function enableNativeAndroidKeyboardAssist() {
 }
 
 document.addEventListener('DOMContentLoaded', enableNativeAndroidKeyboardAssist);
+
+// Both directions use the existing per-drug concentration and unit conventions.
+function getDoseUnit(config) {
+  return config.doseUnit + (config.weight ? '/kg' : '') + (config.divideBy60 ? '/min' : '/h');
+}
+
+function furosemideDailyGrams(doseMgKgHour, weightKg) {
+  return doseMgKgHour * weightKg * 24 / 1000;
+}
+
+// Interface increments only: these are not clinical titration recommendations.
+function adjustInfusionInput(current, step, direction) {
+  const value = Number.isFinite(current) && current > 0 ? current : 0;
+  if (direction < 0 && value > 0 && value <= step) return value;
+  return Math.max(step, Math.round((value + direction * step) * 1000) / 1000);
+}
+
+function computeInverseRate(config, presentation, amps, solution, weight, dose) {
+  let volume = solution;
+  const ampVolume = presentation.volume || presentation.displayVolume || 0;
+  if (config.volumeMode === 'add') volume += amps * ampVolume;
+  if (config.volumeMode === 'presentation') volume = amps * ampVolume;
+  const concentration = amps * presentation.amount * config.scale / volume;
+  if (![amps, solution, dose, volume, concentration].every(Number.isFinite) ||
+      amps <= 0 || solution < 0 || dose <= 0 || volume <= 0 || concentration <= 0 ||
+      (config.weight && (!Number.isFinite(weight) || weight <= 0))) return NaN;
+  const rate = dose * (config.weight ? weight : 1) * (config.divideBy60 ? 60 : 1) / concentration;
+  return Number.isFinite(rate) && rate > 0 ? rate : NaN;
+}
+
+function initializeCalculationDirections() {
+  Object.entries(CALCULATION_DETAIL_CONFIG).forEach(function ([index, config]) {
+    const section = document.getElementById('section' + index);
+    const form = section?.querySelector(':scope > form');
+    const input = document.getElementById(config.speed);
+    if (!form || !input) return;
+    const label = form.querySelector('label[for="' + input.id + '"]');
+    const submit = form.querySelector('button[type="submit"]');
+    const result = document.getElementById('result' + index);
+    const originalSubmit = form.onsubmit;
+    const originalLabel = label.textContent;
+    const originalButton = submit.textContent;
+    const selector = document.createElement('div');
+    selector.className = 'calculation-direction';
+    selector.setAttribute('role', 'group');
+    selector.setAttribute('aria-label', 'Sentido del cálculo');
+    form.dataset.direction = 'forward';
+    const clearResult = function () {
+      result.textContent = '';
+      clearDoseRange(result.id);
+      const detail = form.querySelector('[data-calculation-detail]');
+      if (detail) detail.hidden = true;
+    };
+    [['forward', 'Velocidad → Dosis'], ['inverse', 'Dosis → Velocidad']].forEach(function ([mode, text]) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = mode === 'forward' ? 'Vel. → Dosis' : 'Dosis → Vel.';
+      button.setAttribute('aria-label', text);
+      button.title = text;
+      button.dataset.direction = mode;
+      button.setAttribute('aria-pressed', String(mode === 'forward'));
+      button.addEventListener('click', function () {
+        if (form.dataset.direction === mode) return;
+        form.dataset.direction = mode;
+        const inverse = mode === 'inverse';
+        selector.querySelectorAll('button').forEach(function (item) {
+          item.setAttribute('aria-pressed', String(item.dataset.direction === mode));
+        });
+        label.textContent = inverse ? 'Dosis (' + getDoseUnit(config) + '):' : originalLabel;
+        input.placeholder = inverse ? getDoseUnit(config) : 'ml/h';
+        submit.textContent = inverse ? 'Calcular ml/h' : originalButton;
+        const step = inverse ? (config.doseUnit === 'UI' ? 0.001 : 0.01) : 1;
+        const unit = inverse ? getDoseUnit(config) : 'ml/h';
+        input.dataset.adjustmentStep = String(step);
+        form.querySelectorAll('.rate-stepper').forEach(function (stepper) {
+          stepper.hidden = false;
+          stepper.setAttribute('aria-label', 'Ajustar ' + unit);
+          const descriptions = [
+            'Aumentar ' + String(step).replace('.', ',') + ' ' + unit,
+            'Disminuir ' + String(step).replace('.', ',') + ' ' + unit,
+            'Limpiar ' + (inverse ? 'dosis' : 'ml/h')
+          ];
+          stepper.querySelectorAll('button').forEach(function (control, position) {
+            control.setAttribute('aria-label', descriptions[position]);
+            control.title = descriptions[position];
+          });
+        });
+        input.value = '';
+        input.removeAttribute('aria-invalid');
+        clearResult();
+        dispatchInputValueChange(input);
+      });
+      selector.appendChild(button);
+    });
+    const directionField = document.createElement('div');
+    directionField.className = 'calculation-direction-field';
+    label.before(directionField);
+    directionField.append(selector, label, input);
+    form.onsubmit = function (event) {
+      if (form.dataset.direction !== 'inverse') return originalSubmit.call(form, event);
+      event.preventDefault();
+      clearResult();
+      const dose = getNumber(config.speed);
+      const rate = computeInverseRate(config, getDrugPresentation(index), getNumber(config.amps),
+        config.solution ? getNumber(config.solution) : 0,
+        config.weight ? getNumber(config.weight) : 1, dose);
+      if (!Number.isFinite(rate)) {
+        result.textContent = 'Revisá los valores.';
+        return;
+      }
+      result.textContent = (rate < 0.05 ? '< 0,1' : formatResultNumber(rate, 1)) + ' ml/h';
+      const context = document.createElement('small');
+      context.className = 'inverse-dose-context';
+      context.textContent = 'equivale a ' + formatCalculationNumber(dose) + ' ' + getDoseUnit(config);
+      if (Number(index) === 8) {
+        const dailyGrams = furosemideDailyGrams(dose, getNumber(config.weight));
+        context.appendChild(document.createElement('br'));
+        context.appendChild(document.createTextNode(formatResultNumber(dailyGrams, 2) +
+          ' g en 24 hs a esa dosis constante.'));
+      }
+      result.appendChild(context);
+      // Range indicators refer to the entered dose, never to the resulting ml/h.
+      applyDoseRange(Number(index), dose);
+      if (typeof gtag === 'function') gtag('event', 'calculo_realizado', {
+        farmaco: MEDICATION_SLUGS[index], sentido: 'dosis_a_velocidad'
+      });
+    };
+    form.addEventListener('input', clearResult);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initializeCalculationDirections);
+
+function estimateInfusionMinutes(volume, rate) {
+  if (!Number.isFinite(volume) || !Number.isFinite(rate) || volume < 0 || rate <= 0) return NaN;
+  const minutes = volume / rate * 60;
+  return Number.isFinite(minutes) ? minutes : NaN;
+}
+
+function formatInfusionDuration(minutes) {
+  if (!Number.isFinite(minutes) || minutes < 0) return '';
+  if (minutes === 0) return 'Sin volumen restante';
+  if (minutes < 1) return 'Menos de 1 min';
+  const rounded = Math.round(minutes);
+  const hours = Math.floor(rounded / 60);
+  const remainder = rounded % 60;
+  return (hours ? hours + ' h' : '') + (hours && remainder ? ' ' : '') +
+    (remainder ? remainder + ' min' : '');
+}
+
+function initializeInfusionDuration() {
+  Object.entries(CALCULATION_DETAIL_CONFIG).forEach(function ([index, config]) {
+    const section = document.getElementById('section' + index);
+    const form = section?.querySelector(':scope > form');
+    const result = document.getElementById('result' + index);
+    if (!form || !result) return;
+    const note = document.createElement('section');
+    note.className = 'infusion-duration-note';
+    note.hidden = true;
+    const heading = document.createElement('h3');
+    heading.textContent = 'Duración estimada';
+    const durationText = document.createElement('p');
+    note.append(heading, durationText);
+    form.after(note);
+    const clear = function () { note.hidden = true; durationText.textContent = ''; };
+    form.addEventListener('input', clear);
+    form.addEventListener('reset', clear);
+    form.addEventListener('submit', clear, true);
+    const calculate = form.onsubmit;
+    form.onsubmit = function (event) {
+      clear();
+      const returned = calculate.call(form, event);
+      if (!result.textContent || result.textContent.includes('Revisá')) return returned;
+      const presentation = getDrugPresentation(index);
+      const amps = getNumber(config.amps);
+      const solution = config.solution ? getNumber(config.solution) : 0;
+      let volume = solution;
+      const ampVolume = presentation.volume || presentation.displayVolume || 0;
+      if (config.volumeMode === 'add') volume += amps * ampVolume;
+      if (config.volumeMode === 'presentation') volume = amps * ampVolume;
+      let rate = getNumber(config.speed);
+      if (form.dataset.direction === 'inverse') {
+        rate = computeInverseRate(config, presentation, amps, solution,
+          config.weight ? getNumber(config.weight) : 1, rate);
+        // Estimate using the displayed pump speed, not hidden extra precision.
+        rate = Number(rate.toFixed(1));
+      }
+      const minutes = estimateInfusionMinutes(volume, rate);
+      if (Number.isFinite(minutes) && minutes > 0) {
+        const time = document.createElement('strong');
+        time.textContent = formatInfusionDuration(minutes).toLowerCase();
+        durationText.replaceChildren(
+          document.createTextNode('A velocidad constante, la infusión finalizará en '),
+          time,
+          document.createTextNode(', desde el inicio, con volumen completo.')
+        );
+        note.hidden = false;
+      }
+      return returned;
+    };
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initializeInfusionDuration);

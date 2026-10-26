@@ -1507,7 +1507,8 @@ h8 {
   margin: 5px 0;
 }
 
-.section > form > input[aria-invalid="true"] {
+.section > form > input[aria-invalid="true"],
+.calculation-direction-field > input[aria-invalid="true"] {
   border-color: #c85b67;
   box-shadow: 0 0 0 3px color-mix(in srgb, #c85b67 14%, transparent);
 }
@@ -1522,8 +1523,77 @@ h8 {
   justify-self: start;
 }
 
+.rate-stepper[hidden],
 .recent-values[hidden] {
   display: none;
+}
+
+.section > form > .calculation-direction-field {
+  grid-column: 1 / 3;
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 68px;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin: 6px 0;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--accent-color) 24%, transparent);
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--accent-color) 6%, var(--bg-color));
+}
+.calculation-direction-field > input {
+  width: 68px;
+  max-width: 100%;
+  margin: 0;
+}
+.calculation-direction-field > label {
+  margin: 0;
+  min-width: 0;
+  text-align: right;
+  font-size: 12px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.calculation-direction-field > .calculation-direction {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 76px;
+  gap: 2px;
+  padding: 2px;
+  margin: 0;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent-color) 13%, var(--bg-color));
+}
+.calculation-direction > button {
+  width: auto;
+  min-width: 0;
+  min-height: 23px;
+  margin: 0;
+  padding: 4px 3px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--accent-color);
+  font-size: 10px;
+  white-space: nowrap;
+  line-height: 1.3;
+  box-shadow: none;
+}
+.calculation-direction > button[aria-pressed="true"] {
+  background: var(--button-bg);
+  color: var(--button-text);
+  box-shadow: 0 1px 4px #00000018;
+}
+.calculation-direction > button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+.inverse-dose-context {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+  font-weight: normal;
+  color: var(--text-secondary);
 }
 
 .recent-values {
@@ -1579,10 +1649,12 @@ h8 {
 }
 
 .rate-stepper {
-  display: flex;
+  display: grid;
+  grid-template-columns: 28px 24px;
+  grid-template-rows: repeat(2, 28px);
   align-items: center;
-  gap: 3px;
-  width: 80px;
+  gap: 4px;
+  width: 56px;
   min-height: 34px;
 }
 
@@ -1607,6 +1679,33 @@ h8 {
 .rate-stepper > .rate-stepper-button.is-adjustment {
   flex-basis: 28px;
   width: 28px;
+  grid-column: 1;
+}
+
+.rate-stepper > .rate-stepper-button.is-adjustment:first-child {
+  grid-row: 1;
+}
+
+.rate-stepper > .rate-stepper-button.is-adjustment:nth-child(2) {
+  grid-row: 2;
+}
+
+.rate-stepper > .rate-stepper-button.is-clear {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  width: 24px;
+  align-self: center;
+}
+
+.rate-stepper-button.is-clear > svg {
+  color: #c984a0;
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .rate-stepper > .rate-stepper-button:hover,
@@ -1890,7 +1989,8 @@ p[id^="result"],
   margin-bottom: 2px;
 }
 
-.calculation-history h3 {
+.calculation-history h3,
+.infusion-duration-note h3 {
   width: auto;
   margin: 0;
   border: 0;
@@ -2608,4 +2708,29 @@ body.native-keyboard-open .presentation-dialog-card {
   max-height: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.infusion-duration-note {
+  width: min(80%, 350px);
+  margin: 20px auto 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-soft);
+  color: var(--muted-text);
+  font-size: 12px;
+  font-weight: normal;
+  line-height: 1.5;
+  text-align: center;
+}
+.infusion-duration-note > p {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.infusion-duration-note strong {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+.infusion-duration-note[hidden] {
+  display: none;
 }
