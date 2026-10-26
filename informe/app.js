@@ -54,14 +54,24 @@ function calculate(data) {
   const ava = lvotDiam && lvotVti && avVti ? (Math.PI * ((lvotDiam / 2) ** 2) * lvotVti) / avVti : null;
   const dimensionlessIndex = lvotVti && avVti ? lvotVti / avVti : null;
   const e = number(data, 'eWave'), a = number(data, 'aWave');
+  const ePrimeInput = number(data, 'ePrime');
+  const isImpUser = window.activeReportUser === 'eliseo-imp';
+  // En IMP el casillero contiene la velocidad e' septal. Se aceptan cm/s
+  // (por ejemplo, 8) o m/s (0,08) y se calcula la relación con la onda E.
+  const ePrimeVelocity = isImpUser && ePrimeInput
+    ? (ePrimeInput > 1 ? ePrimeInput / 100 : ePrimeInput)
+    : null;
+  const eToEPrime = isImpUser
+    ? (e && ePrimeVelocity ? e / ePrimeVelocity : null)
+    : ePrimeInput;
   const aorticPeakGradient = number(data, 'avVmax') ? 4 * (number(data, 'avVmax') ** 2) : null;
   const aorticMeanGradient = number(data, 'aorticMeanGradient');
   const aorticStenosis = number(data, 'avVmax') && number(data, 'avVmax') >= 1.8 && aorticMeanGradient != null
     ? aorticMeanGradient < 20 ? 'leve' : aorticMeanGradient < 40 ? 'moderada' : 'severa' : null;
   const laVolume = number(data, 'laVolume');
   const laVolumeIndex = laVolume && asc ? laVolume / asc : null;
-  const wedgePressure = number(data, 'ePrime') ? (1.24 * number(data, 'ePrime')) + 1.9 : null;
-  return { asc, shortening, mass, rwt, psap, ava, dimensionlessIndex, eOverA: e && a ? e / a : null, aorticPeakGradient, aorticStenosis, laVolumeIndex, wedgePressure };
+  const wedgePressure = eToEPrime ? (1.24 * eToEPrime) + 1.9 : null;
+  return { asc, shortening, mass, rwt, psap, ava, dimensionlessIndex, eOverA: e && a ? e / a : null, eToEPrime, aorticPeakGradient, aorticStenosis, laVolumeIndex, wedgePressure };
 }
 
 function escapeHtml(text) { return String(text ?? '—').replace(/[&<>'"]/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' })[char]); }
@@ -238,7 +248,10 @@ function autoDescriptions(data, c) {
   } else if (isDoppler && c.aorticStenosis) {
     const restriction = c.aorticStenosis === 'leve' ? 'apertura levemente restringida' : c.aorticStenosis === 'moderada' ? 'apertura restringida en grado moderado' : 'apertura severamente restringida';
     aortic = `Esclerocalcificación de sus valvas, con ${restriction}. Vel max. ${textNumber(vmax, 1)} m/seg. GM ${textNumber(gm)} mmHg. GP ${textNumber(c.aorticPeakGradient)} mmHg.`;
-    if (c.ava) aortic += ` Se estimó área por ecuación de continuidad en ${fmtUpTo(c.ava, 2)} cm² (TSVI ${textNumber(number(data, 'lvotDiam'))} cm).`;
+    if (c.ava) {
+      const lvotDiameterEntered = String(data.get('lvotDiam') || '').trim();
+      aortic += ` Se estimó área por ecuación de continuidad en ${fmtUpTo(c.ava, 2)} cm² (TSVI ${lvotDiameterEntered} cm).`;
+    }
     if (c.dimensionlessIndex) aortic += ` Cociente adimensional: ${fmtUpTo(c.dimensionlessIndex, 2)}.`;
   } else {
     aortic = !isDoppler && age && age > 80
@@ -414,6 +427,8 @@ function render() {
   el('#dimensionlessResult').textContent = c.dimensionlessIndex ? fmtUpTo(c.dimensionlessIndex, 2) : '—';
   el('#laVolumeIndexResult').textContent = c.laVolumeIndex == null ? '—' : `${fmt(c.laVolumeIndex, 0)} ml/m²`;
   el('#wedgePressureResult').textContent = c.wedgePressure == null ? '—' : `${fmt(c.wedgePressure, 0)} mmHg`;
+  el('#hviQuickMass').textContent = c.mass == null ? '—' : fmt(c.mass, 0);
+  el('#hviQuickEpr').textContent = c.rwt == null ? '—' : fmt(c.rwt, 2);
   const name = patientNameForReport(data.get('patientName'));
   el('#reportPatient').textContent = `Apellido y nombre: ${name || '—'}`;
   el('#reportDate').textContent = data.get('studyDate') ? new Date(`${data.get('studyDate')}T12:00:00`).toLocaleDateString('es-AR') : '';
@@ -439,7 +454,7 @@ function render() {
     `<div class="doppler-block ${isDoppler ? '' : 'is-disabled'}">`,
     measureHeading('V A L O R A C I Ó N&nbsp;&nbsp; D O P P L E R'),
     measureRow('Velocidad E:', dopplerValue('eWave','m/s',1), '', 'Velocidad A:', dopplerValue('aWave','m/s',1), ''),
-    measureRow("Relación E/E' septal:", dopplerValue('ePrime','',0), '[&lt;15]', 'Patrón de relajación:', isDoppler ? editableMetric('relaxation', relaxation) : '', ''),
+    measureRow("Relación E/E' septal:", window.activeReportUser === 'eliseo-imp' ? dopplerCalculated(c.eToEPrime,'',0) : dopplerValue('ePrime','',0), '[&lt;15]', 'Patrón de relajación:', isDoppler ? editableMetric('relaxation', relaxation) : '', ''),
     measureRow('Insuficiencia mitral:', dopplerValue('mr'), '', 'Insuficiencia tricuspídea:', dopplerValue('tr'), ''),
     measureRow('Gradiente transtricuspídeo:', dopplerValue('trGradient','mmHg',0), '', 'PAD estimada:', dopplerValue('rap','mmHg',0), ''),
     measureRow('PSAP estimada:', dopplerCalculated(c.psap,'mmHg',0), '[&lt;36 mmHg]', 'Hipertensión pulmonar:', isDoppler ? editableMetric('pulmonaryHypertension', pulmonaryHypertension) : '', ''),
@@ -826,7 +841,7 @@ function plainReportText() {
     tripled('Diámetro diastólico VD:', plainInput('rv', 'mm', 0), 'TAPSE:', plainInput('tapse', 'mm', 0), 'Vena cava inferior:', plainInput('ivc', 'mm', 0)),
     '', 'VALORACIÓN DOPPLER:',
     paired('Velocidad E:', plainDopplerInput('eWave', 'm/s', 1), 'Velocidad A:', plainDopplerInput('aWave', 'm/s', 1)),
-    paired("Relacion E/e' septal:", plainDopplerInput('ePrime', '', 0), 'Patrón de relajación:', relaxation),
+    paired("Relacion E/e' septal:", window.activeReportUser === 'eliseo-imp' ? plainDopplerCalculated(c.eToEPrime, '', 0) : plainDopplerInput('ePrime', '', 0), 'Patrón de relajación:', relaxation),
     paired('Insuficiencia mitral:', plainDopplerInput('mr'), 'Insuficiencia tricuspídea:', plainDopplerInput('tr')),
     paired('GTT:', plainDopplerInput('trGradient', 'mmHg', 0), 'PAD estimada:', plainDopplerInput('rap', 'mmHg', 0)),
     paired('PSAP estimada:', plainDopplerCalculated(c.psap, 'mmHg', 0), 'Hipertensión pulmonar:', pulmonaryHypertension),

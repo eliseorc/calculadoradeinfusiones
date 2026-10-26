@@ -86,13 +86,16 @@
     });
     const studyTypeField = document.querySelector('.study-type-field');
     if (studyTypeField) studyTypeField.hidden = Boolean(user.imp);
+    const ePrimeQuickLabel = document.querySelector('#ePrimeQuickLabel');
+    if (ePrimeQuickLabel) ePrimeQuickLabel.textContent = user.imp ? "e'" : "E/e'";
     if (user.imp) {
       const studyType = document.querySelector('#studyType');
       const bidimensionalTitle = document.querySelector('#bidimensionalTitle');
       if (studyType) studyType.value = 'Si';
       if (bidimensionalTitle) bidimensionalTitle.checked = false;
-      document.querySelector('#ecoForm')?.dispatchEvent(new Event('input', { bubbles: true }));
     }
+    // Recalcula la interpretación de e' al entrar o salir del perfil IMP.
+    document.querySelector('#ecoForm')?.dispatchEvent(new Event('input', { bubbles: true }));
 
     if (!user.edvc && document.body.dataset.activeStudy === 'edvc') {
       document.querySelector('#ecoTab')?.click();
